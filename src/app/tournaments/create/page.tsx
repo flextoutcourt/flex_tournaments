@@ -10,14 +10,14 @@ import { FaPlusCircle, FaFont, FaAlignLeft, FaExclamationTriangle } from 'react-
 
 // Interface pour les données du formulaire (mise à jour pour correction du type)
 interface ITournamentFormInputs {
-  title: string;
-  description?: string; // Modifié: la clé est optionnelle, ce qui correspond au schéma Yup
+  title: string; 
+  description: string; // MODIFIÉ: La clé 'description' est requise, mais sa valeur peut être undefined/null
 }
 
 // Schéma de validation Yup (mis à jour)
 const schema = yup.object().shape({
   title: yup.string().required("Le nom du tournoi est requis.").min(3, "Le nom doit contenir au moins 3 caractères."),
-  description: yup.string().optional().max(500, "La description ne doit pas dépasser 500 caractères."), // .optional() gère string | undefined
+  description: yup.string().required().max(500, "La description ne doit pas dépasser 500 caractères."),
 });
 
 export default function CreateTournamentPage() {
@@ -25,17 +25,12 @@ export default function CreateTournamentPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const router = useRouter();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid, isSubmitting },
-    reset,
-  } = useForm<ITournamentFormInputs>({
+  const { register, handleSubmit, formState: { errors, isValid, isSubmitting }, reset } = useForm<ITournamentFormInputs>({
     resolver: yupResolver(schema),
-    mode: 'onChange', // Valider au changement pour un feedback immédiat
+    mode: 'onChange',
     defaultValues: {
       title: '',
-      description: undefined, // Modifié: initialiser à undefined pour correspondre au type
+      description: "", // Laisser undefined est correct, la clé sera présente
     },
   });
 
@@ -48,8 +43,8 @@ export default function CreateTournamentPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: data.title,
-          description: data.description || null, // Envoyer null si la description est undefined ou vide
+          title: data.title, // Assurez-vous que l'API attend 'title'
+          description: data.description ?? null, // Envoyer null si description est undefined ou null
         }),
       });
 
@@ -62,7 +57,7 @@ export default function CreateTournamentPage() {
       // Réinitialiser le formulaire
       reset();
       // Rediriger vers la page du tournoi nouvellement créé (où l'on pourra ajouter des items)
-      router.push(`/tournaments/${newTournament.id}`);
+      router.push(`/tournaments/${newTournament.id}`); // Ajusté pour correspondre à la structure de route probable
 
     } catch (error: any) {
       setServerError(error.message || 'Une erreur inconnue est survenue.');
@@ -89,17 +84,17 @@ export default function CreateTournamentPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Nom du Tournoi */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1"> {/* Changé htmlFor de "name" à "title" */}
             <FaFont className="inline-block mr-2 mb-0.5" />Nom du Tournoi
           </label>
           <input
-            id="title"
+            id="title" // Changé id de "name" à "title"
             type="text"
-            {...register('title')}
+            {...register('title')} // Changé de 'name' à 'title'
             className={`w-full px-4 py-2 bg-gray-700 border ${errors.title ? 'border-red-500' : 'border-gray-600'} rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-500`}
             placeholder="Ex: Les meilleures performances live"
           />
-          {errors.name && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
+          {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>}
         </div>
 
         {/* Description du Tournoi (Optionnel) */}

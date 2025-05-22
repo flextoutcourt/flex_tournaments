@@ -9,12 +9,12 @@ import { FaPlus, FaYoutube, FaFont, FaExclamationTriangle } from 'react-icons/fa
 import { useRouter } from 'next/navigation'; // Importer useRouter
 
 interface IAddItemFormInputs {
-  name?: string;
+  // name?: string;
   youtubeUrl: string;
 }
 
 const schema = yup.object().shape({
-  name: yup.string().optional(),
+  // name: yup.string().optional(),
   youtubeUrl: yup.string().required().url("Veuillez entrer une URL YouTube valide (ex: https://www.youtube.com/watch?v=...).")
     .matches(
       /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/,
@@ -42,7 +42,7 @@ export default function AddItemForm({ tournamentId, itemCount }: AddItemFormProp
     resolver: yupResolver(schema),
     mode: 'onChange',
     defaultValues: {
-      name: '',
+      // name: '',
       youtubeUrl: '',
     },
   });
@@ -56,7 +56,7 @@ export default function AddItemForm({ tournamentId, itemCount }: AddItemFormProp
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: data.name,
+          // name: data.name,
           youtubeUrl: data.youtubeUrl || null,
         }),
       });
@@ -94,19 +94,19 @@ export default function AddItemForm({ tournamentId, itemCount }: AddItemFormProp
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
+        {/* <div>
           <label htmlFor="itemName" className="block text-sm font-medium text-gray-300 mb-1">
             <FaFont className="inline-block mr-1.5 mb-0.5" />Nom du Participant (optionel si lien youtube)
           </label>
           <input
-            id="itemName"
+            id="itemName"q
             type="text"
             {...register('name')}
             className={`w-full px-3 py-2 bg-gray-700 border ${errors.name ? 'border-red-500' : 'border-gray-600'} rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-500`}
             placeholder="Ex: Titre de la musique, nom du jeu..."
           />
           {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>}
-        </div>
+        </div> */}
 
         <div>
           <label htmlFor="youtubeUrl" className="block text-sm font-medium text-gray-300 mb-1">
