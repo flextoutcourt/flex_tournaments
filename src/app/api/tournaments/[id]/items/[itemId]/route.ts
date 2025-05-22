@@ -1,22 +1,21 @@
 // app/api/tournaments/[id]/items/[itemId]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextApiRequest, NextApiResponse } from 'next';
 import {prisma} from '@/lib/prisma'; // Assurez-vous que ce chemin et l'export de prisma sont corrects
 
 // L'interface DeleteRouteContext n'est plus nécessaire si on type directement le paramètre.
 
 // DELETE: Supprimer un item spécifique d'un tournoi
 export async function DELETE(
-  request: NextRequest,
-  // Modifier la signature du deuxième argument pour correspondre à ce que Next.js attend
-  { params }: { params: { id: string; itemId: string } } 
+  request: NextApiRequest,
+  response: NextApiResponse,
 ) {
-  const { id: tournamentId, itemId } = params; // Déstructurer directement depuis params
+  const { id: tournamentId, itemId } = request.query as { id: string; itemId: string }; // Déstructurer directement depuis params
 
   if (!tournamentId) {
-    return NextResponse.json({ error: "L'ID du tournoi est manquant." }, { status: 400 });
+    return response.status(400).json({ error: "L'ID du tournoi est manquant." });
   }
   if (!itemId) {
-    return NextResponse.json({ error: "L'ID de l'item est manquant." }, { status: 400 });
+    return response.status(400).json({ error: "L'ID de l'item est manquant." });
   }
 
   try {
@@ -26,7 +25,7 @@ export async function DELETE(
     });
 
     if (!tournament) {
-      return NextResponse.json({ error: "Tournoi parent non trouvé." }, { status: 404 });
+      return response.status(404).json({ error: "Tournoi parent non trouvé." });
     }
 
     // Essayer de supprimer l'item.
@@ -49,18 +48,17 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({ message: "Item supprimé avec succès.", deletedItem }, { status: 200 });
+    return response.status(200).json({ message: "Item supprimé avec succès.", deletedItem });
 
   } catch (error: any) {
     console.error(`Erreur lors de la suppression de l'item ${itemId} du tournoi ${tournamentId}:`, error);
     
     if (error.code === 'P2025') { // Erreur Prisma: L'enregistrement à supprimer n'existe pas.
-      return NextResponse.json({ error: "Item non trouvé pour la suppression." }, { status: 404 });
+      return response.status(404).json({ error: "Item non trouvé pour la suppression." });
     }
     
-    return NextResponse.json(
-      { error: "Une erreur interne est survenue lors de la suppression de l'item.", details: error.message },
-      { status: 500 }
+    return response.status(500).json(
+      { error: "Une erreur interne est survenue lors de la suppression de l'item.", details: error.message }
     );
   }
 }
