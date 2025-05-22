@@ -1,9 +1,7 @@
-// app/api/tournaments/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
-// Schéma de validation
 const TournamentUpdateSchema = z.object({
   title: z.string().trim().min(3, "Le titre doit contenir au moins 3 caractères.").optional(),
   description: z
@@ -14,12 +12,14 @@ const TournamentUpdateSchema = z.object({
     .optional(),
 });
 
-// GET: Récupérer un tournoi spécifique
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+function getIdFromRequest(request: NextRequest) {
+  const pathname = request.nextUrl.pathname; // ex: "/api/tournaments/<id>"
+  const parts = pathname.split('/');
+  return parts[parts.length - 1];
+}
+
+export async function GET(request: NextRequest) {
+  const id = getIdFromRequest(request);
 
   if (!id) {
     return NextResponse.json({ error: "L'ID du tournoi est manquant." }, { status: 400 });
@@ -28,11 +28,7 @@ export async function GET(
   try {
     const tournament = await prisma.tournament.findUnique({
       where: { id },
-      include: {
-        Items: {
-          orderBy: { createdAt: 'asc' },
-        },
-      },
+      include: { Items: { orderBy: { createdAt: 'asc' } } },
     });
 
     if (!tournament) {
@@ -49,12 +45,8 @@ export async function GET(
   }
 }
 
-// PUT: Mettre à jour un tournoi
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+export async function PUT(request: NextRequest) {
+  const id = getIdFromRequest(request);
 
   if (!id) {
     return NextResponse.json({ error: "L'ID du tournoi est manquant." }, { status: 400 });
@@ -119,12 +111,8 @@ export async function PUT(
   }
 }
 
-// DELETE: Supprimer un tournoi
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+export async function DELETE(request: NextRequest) {
+  const id = getIdFromRequest(request);
 
   if (!id) {
     return NextResponse.json({ error: "L'ID du tournoi est manquant." }, { status: 400 });
@@ -132,7 +120,6 @@ export async function DELETE(
 
   try {
     await prisma.tournament.delete({ where: { id } });
-
     return NextResponse.json({ message: "Tournoi supprimé avec succès." }, { status: 200 });
   } catch (error: any) {
     console.error(`Erreur lors de la suppression du tournoi ${id}:`, error);
