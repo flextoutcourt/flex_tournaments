@@ -1,57 +1,54 @@
 // app/api/tournaments/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import {prisma} from '@/lib/prisma'; // Assurez-vous que le chemin vers votre instance Prisma est correct
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
 
-// Interface pour le corps de la requête attendu
-interface TournamentCreateRequest {
-  title: string;
-  description?: string | null;
-}
+// Schéma de validation avec Zod
+const TournamentCreateSchema = z.object({
+  title: z.string().trim().min(3, "Le nom du tournoi doit contenir au moins 3 caractères."),
+  description: z
+    .string()
+    .trim()
+    .max(500, "La description ne doit pas dépasser 500 caractères.")
+    .nullable()
+    .optional(),
+});
 
+// POST: Créer un nouveau tournoi
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as TournamentCreateRequest;
-    const { title, description } = body;
+    const json = await request.json();
 
-    // Validation simple (des validations plus complexes peuvent être ajoutées)
-    if (!title || typeof title !== 'string' || title.trim().length < 3) {
+    const parsed = TournamentCreateSchema.safeParse(json);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Le nom du tournoi est requis et doit contenir au moins 3 caractères." },
+        { error: parsed.error.issues[0]?.message ?? "Erreur de validation." },
         { status: 400 }
       );
     }
 
-    if (description && (typeof description !== 'string' || description.length > 500)) {
-      return NextResponse.json(
-        { error: "La description ne doit pas dépasser 500 caractères." },
-        { status: 400 }
-      );
-    }
+    const { title, description } = parsed.data;
 
-    // Création du tournoi dans la base de données
     const newTournament = await prisma.tournament.create({
-      data: body,
+      data: { title, description },
     });
 
     return NextResponse.json(newTournament, { status: 201 });
-
   } catch (error: any) {
     console.error("Erreur lors de la création du tournoi:", error);
 
-    // Gérer les erreurs spécifiques de Prisma (ex: contrainte d'unicité sur le nom)
-    if (error.code === 'P2002' && error.meta?.target?.includes('name')) {
+    if (error.code === 'P2002' && error.meta?.target?.includes('title')) {
       return NextResponse.json(
-        { error: "Un tournoi avec ce nom existe déjà." },
-        { status: 409 } // 409 Conflict
+        { error: "Un tournoi avec ce titre existe déjà." },
+        { status: 409 }
       );
     }
-    
-    // Gérer les erreurs de parsing JSON
+
     if (error instanceof SyntaxError) {
-        return NextResponse.json(
-            { error: "Corps de la requête JSON invalide." },
-            { status: 400 }
-        );
+      return NextResponse.json(
+        { error: "Corps de la requête JSON invalide." },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(
@@ -61,13 +58,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Optionnel: Gérer la récupération de tous les tournois (GET)
+// GET: Récupérer tous les tournois
 export async function GET(request: NextRequest) {
   try {
     const tournaments = await prisma.tournament.findMany({
-      orderBy: {
-        createdAt: 'desc', // Afficher les plus récents en premier
-      },
+      orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(tournaments, { status: 200 });
   } catch (error: any) {
