@@ -8,12 +8,6 @@ import AddItemForm from '@/components/Forms/Tournament/AddItemForm';
 import TournamentItemsList from '@/components/Tournament/TournamentItemsList';
 import LaunchTournamentSection from '@/components/Tournament/LaunchTournamentSection';
 
-interface TournamentPageProps {
-  params: {
-    id: string;
-  };
-}
-
 // Fonction pour récupérer les données du tournoi
 async function getTournament(id: string) {
   const tournament = await prisma.tournament.findUnique({
@@ -35,7 +29,7 @@ async function getTournament(id: string) {
 
 // Générer les métadonnées dynamiquement
 export async function generateMetadata(
-  { params }: TournamentPageProps,
+  { params }: {params: {id: string}},
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const id = params.id;
@@ -54,7 +48,7 @@ export async function generateMetadata(
 }
 
 
-export default async function TournamentPage({ params }: TournamentPageProps) {
+export default async function TournamentPage({ params }: {params: {id: string}}) {
   const tournament = await getTournament(params.id);
 
   // Statut initial du tournoi (vous ajouterez un champ statut à votre modèle Tournament plus tard)
