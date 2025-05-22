@@ -2,20 +2,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {prisma} from '@/lib/prisma'; // Assurez-vous que ce chemin et l'export de prisma sont corrects
 
-// Définir une interface pour le contexte de la route, y compris les paramètres dynamiques
-interface DeleteRouteContext {
-  params: {
-    id: string;       // Correspond au segment [id] de l'URL (sera utilisé comme tournamentId)
-    itemId: string;   // Correspond au segment [itemId] de l'URL
-  };
-}
+// L'interface DeleteRouteContext n'est plus nécessaire si on type directement le paramètre.
 
 // DELETE: Supprimer un item spécifique d'un tournoi
 export async function DELETE(
   request: NextRequest,
-  context: DeleteRouteContext // Utiliser l'interface définie pour le deuxième argument
+  // Modifier la signature du deuxième argument pour correspondre à ce que Next.js attend
+  { params }: { params: { id: string; itemId: string } } 
 ) {
-  const { id: tournamentId, itemId } = context.params; // Déstructurer et renommer 'id' en 'tournamentId' pour la clarté
+  const { id: tournamentId, itemId } = params; // Déstructurer directement depuis params
 
   if (!tournamentId) {
     return NextResponse.json({ error: "L'ID du tournoi est manquant." }, { status: 400 });
@@ -39,12 +34,18 @@ export async function DELETE(
     const deletedItem = await prisma.item.delete({
       where: {
         id: itemId,
-        // Si vous voulez vous assurer que l'item appartient bien au tournoi spécifié,
-        // et que votre modèle Item a un champ tournamentId, vous pouvez ajouter :
-        // tournamentId: tournamentId,
-        // Cela rend la condition de suppression plus stricte.
-        // Cependant, si itemId est globalement unique (comme un CUID),
-        // where: { id: itemId } est généralement suffisant.
+        // Pour s'assurer que l'item appartient bien au tournoi spécifié,
+        // vous pouvez ajouter la condition tournamentId si votre modèle Item le contient
+        // et si vous avez une contrainte d'unicité sur (tournamentId, itemId) ou si vous voulez cette sécurité.
+        // Exemple:
+        // AND: [{ tournamentId: tournamentId }],
+        // Ou, si vous avez une relation et que vous voulez être sûr :
+        // tournament: {
+        //   id: tournamentId
+        // }
+        // Cependant, si 'id' de l'item est globalement unique (comme un CUID),
+        // la suppression par 'id: itemId' est directe. La vérification du tournoi parent ci-dessus
+        // ajoute déjà une couche de contexte.
       },
     });
 
