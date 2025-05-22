@@ -185,11 +185,12 @@ export default function TournamentLivePage() {
           width: '100%',
           playerVars: {
             autoplay: 0, controls: 1, modestbranding: 1, rel: 0, showinfo: 0, fs: 1,
+            origin: window.location.origin,
           },
           events: {
             'onReady': (event) => console.log(`Player ${elementId} ready. Video: ${videoIdToLoad}`),
             'onError': (event) => console.error(`Player ${elementId} error:`, event.data, `Video ID: ${videoIdToLoad}`)
-          }
+          },
         });
       } else if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         try { playerRef.current.destroy(); } catch(e) { console.warn(`Error destroying player for ${elementId} (no videoId)`, e); }
