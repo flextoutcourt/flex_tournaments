@@ -49,7 +49,8 @@ export async function generateMetadata(
 }
 
 
-export default async function TournamentPage({ params }: {params: {id: string}}) {
+export default async function TournamentPage(props: Promise<{ params: { id: string } }>) {
+    const {params} = await props;
   const tournament = await getTournament(params.id);
 
   // Statut initial du tournoi (vous ajouterez un champ statut à votre modèle Tournament plus tard)
