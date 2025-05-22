@@ -91,7 +91,7 @@ export default function TournamentLivePage() {
   const liveTwitchChannel = searchParams.get('channel');
 
   const [tournamentTitle, setTournamentTitle] = useState<string | null>(null);
-  const [initialItems, setInitialItems] = useState<Item[]>([]); // Tous les items chargés
+  const [initialItems, setInitialItems] = useState<Item[]>([]); 
   
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +111,7 @@ export default function TournamentLivePage() {
   const player1Ref = useRef<YT.Player | null>(null);
   const player2Ref = useRef<YT.Player | null>(null);
 
-  const [selectedItemCountOption, setSelectedItemCountOption] = useState<string>("all"); // "all", "16", "32", etc.
+  const [selectedItemCountOption, setSelectedItemCountOption] = useState<string>("all"); 
 
   const activeMatch = useMemo(() => {
     if (!isTournamentActive || tournamentWinner || matches.length === 0 || currentMatchIndex >= matches.length) {
@@ -142,15 +142,18 @@ export default function TournamentLivePage() {
   // Listener for YouTube API ready event
   useEffect(() => {
     const handleApiReady = () => {
-        console.log("Component: YouTube API is ready via event listener.");
+        console.log("YT API Listener: API is ready.");
         setYtApiReady(true);
     };
     if ((window as any).isYouTubeApiReady) { 
+        console.log("YT API Listener: API was already ready.");
         handleApiReady();
     } else {
+        console.log("YT API Listener: Adding event listener for youtubeApiReady.");
         window.addEventListener('youtubeApiReady', handleApiReady);
     }
     return () => {
+        console.log("YT API Listener: Removing event listener for youtubeApiReady.");
         window.removeEventListener('youtubeApiReady', handleApiReady);
     };
   }, []);
@@ -161,60 +164,88 @@ export default function TournamentLivePage() {
     const videoId1 = activeMatch?.item1?.youtubeVideoId;
     const videoId2 = activeMatch?.item2?.youtubeVideoId;
 
-    if (!ytApiReady || !activeMatch) {
-      if (player1Ref.current && typeof player1Ref.current.destroy === 'function') {
-        try { player1Ref.current.destroy(); } catch(e) { console.warn("Error destroying player1Ref (no active match / API not ready)", e); }
-        player1Ref.current = null;
-      }
-      if (player2Ref.current && typeof player2Ref.current.destroy === 'function') {
-        try { player2Ref.current.destroy(); } catch(e) { console.warn("Error destroying player2Ref (no active match / API not ready)", e); }
-        player2Ref.current = null;
-      }
+    const cleanupPlayer = (playerRef: React.MutableRefObject<YT.Player | null>, playerName: string) => {
+        if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+            try {
+                playerRef.current.destroy();
+                console.log(`YT Player Effect: ${playerName} destroyed.`);
+            } catch (e) {
+                console.warn(`YT Player Effect: Error destroying ${playerName}`, e);
+            }
+            playerRef.current = null;
+        }
+    };
+
+    if (!ytApiReady) {
+      console.log("YT Player Effect: API not ready. Ensuring players are cleaned up if they exist.");
+      cleanupPlayer(player1Ref, "Player 1");
+      cleanupPlayer(player2Ref, "Player 2");
       return;
     }
 
+    if (!activeMatch) {
+      console.log("YT Player Effect: No active match. Ensuring players are cleaned up if they exist.");
+      cleanupPlayer(player1Ref, "Player 1");
+      cleanupPlayer(player2Ref, "Player 2");
+      return;
+    }
+    
+    console.log(`YT Player Effect: Running. API Ready: ${ytApiReady}. Match: ${activeMatch.item1.name} (ID1: ${videoId1}) vs ${activeMatch.item2.name} (ID2: ${videoId2})`);
+
     const createPlayer = (elementId: string, videoIdToLoad: string | null | undefined, playerRef: React.MutableRefObject<YT.Player | null>) => {
-      if (videoIdToLoad && document.getElementById(elementId)) {
-        console.log(`Creating player for ${elementId} with videoId ${videoIdToLoad}`);
-        if (playerRef.current && typeof playerRef.current.destroy === 'function') {
-          try { playerRef.current.destroy(); } catch(e) { console.warn(`Error destroying previous player for ${elementId}`, e); }
+      const targetElement = document.getElementById(elementId);
+      
+      // Toujours détruire l'instance précédente sur cette ref avant d'en créer une nouvelle ou si pas de videoIdToLoad
+      cleanupPlayer(playerRef, `Previous ${elementId}`);
+
+      if (videoIdToLoad && targetElement) {
+        console.log(`YT Player Effect: Attempting to create player for ${elementId} with videoId ${videoIdToLoad}. Element found:`, targetElement);
+        try {
+            playerRef.current = new YT.Player(elementId, {
+              videoId: videoIdToLoad,
+              height: '100%',
+              width: '100%',
+              playerVars: {
+                autoplay: 0, controls: 1, modestbranding: 1, rel: 0, showinfo: 0, fs: 1,
+                origin: typeof window !== 'undefined' ? window.location.origin : '',
+              },
+              events: {
+                'onReady': (event) => console.log(`YT Player: Player ${elementId} ready. Video: ${videoIdToLoad}`),
+                'onError': (event) => console.error(`YT Player: Player ${elementId} error:`, event.data, `Video ID: ${videoIdToLoad}`)
+              }
+            });
+        } catch (e) {
+            console.error(`YT Player Effect: Error instantiating YT.Player for ${elementId} with videoId ${videoIdToLoad}:`, e);
         }
-        playerRef.current = new YT.Player(elementId, {
-          videoId: videoIdToLoad,
-          height: '100%',
-          width: '100%',
-          playerVars: {
-            autoplay: 0, controls: 1, modestbranding: 1, rel: 0, showinfo: 0, fs: 1,
-            origin: window.location.origin,
-          },
-          events: {
-            'onReady': (event) => console.log(`Player ${elementId} ready. Video: ${videoIdToLoad}`),
-            'onError': (event) => console.error(`Player ${elementId} error:`, event.data, `Video ID: ${videoIdToLoad}`)
-          },
-        });
-      } else if (playerRef.current && typeof playerRef.current.destroy === 'function') {
-        try { playerRef.current.destroy(); } catch(e) { console.warn(`Error destroying player for ${elementId} (no videoId)`, e); }
-        playerRef.current = null;
+      } else if (videoIdToLoad && !targetElement) {
+        console.error(`YT Player Effect: Target element ${elementId} NOT FOUND in DOM for video ${videoIdToLoad}. Player will not be created.`);
+      } else if (!videoIdToLoad) {
+        console.log(`YT Player Effect: No videoId for ${elementId}, player not created (already cleaned up).`);
       }
     };
     
-    const timerId = setTimeout(() => {
+    // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt après le changement de clé de AnimatePresence
+    let rafId: number;
+    const initializePlayers = () => {
+        console.log("YT Player Effect: Initializing players via requestAnimationFrame.");
         createPlayer('youtube-player-1', videoId1, player1Ref);
         createPlayer('youtube-player-2', videoId2, player2Ref);
-    }, 100); 
+    };
+
+    // Si les videoId sont présents, on tente de créer les joueurs.
+    // La clé sur motion.div devrait remonter les divs, donc elles devraient être prêtes.
+    if (videoId1 || videoId2) {
+        rafId = requestAnimationFrame(initializePlayers);
+    }
+
 
     return () => {
-      clearTimeout(timerId);
-      if (player1Ref.current && typeof player1Ref.current.destroy === 'function') {
-        try { player1Ref.current.destroy(); } catch(e) { console.warn("Cleanup: Error destroying player1Ref", e); }
-        player1Ref.current = null;
-      }
-      if (player2Ref.current && typeof player2Ref.current.destroy === 'function') {
-        try { player2Ref.current.destroy(); } catch(e) { console.warn("Cleanup: Error destroying player2Ref", e); }
-        player2Ref.current = null;
-      }
+      cancelAnimationFrame(rafId); // Annuler le RAF si le composant se démonte avant
+      console.log("YT Player Effect: Cleanup function running (due to dependency change or unmount).");
+      cleanupPlayer(player1Ref, "Player 1 on cleanup");
+      cleanupPlayer(player2Ref, "Player 2 on cleanup");
     };
-  }, [activeMatch?.item1?.youtubeVideoId, activeMatch?.item2?.youtubeVideoId, ytApiReady]);
+  }, [activeMatch?.item1?.youtubeVideoId, activeMatch?.item2?.youtubeVideoId, ytApiReady]); // Dépendances clés
 
 
   // 1. Charger les données initiales depuis sessionStorage
@@ -231,7 +262,7 @@ export default function TournamentLivePage() {
         throw new Error("Données du tournoi non trouvées. Veuillez relancer depuis la page du tournoi.");
       }
       const data: TournamentData = JSON.parse(storedData);
-      if (!data.items || data.items.length < 2 || !data.title) { // Minimum 2 items pour un tournoi
+      if (!data.items || data.items.length < 2 || !data.title) { 
         throw new Error("Données du tournoi invalides ou participants insuffisants (minimum 2).");
       }
       setTournamentTitle(data.title);
@@ -412,7 +443,7 @@ export default function TournamentLivePage() {
         participantsForThisRun = shuffleArray([...initialItems]).slice(0, numSelected);
     }
     
-    if (participantsForThisRun.length < 2) { // Double check après sélection/slice
+    if (participantsForThisRun.length < 2) { 
         setError("Sélection invalide, pas assez de participants pour démarrer.");
         return;
     }
@@ -500,8 +531,6 @@ export default function TournamentLivePage() {
     setTournamentWinner(null);
     setCurrentRoundNumber(1);
     setError(null); 
-    // Optionnel: réinitialiser selectedItemCountOption si vous voulez que l'utilisateur rechoisisse
-    // setSelectedItemCountOption("all");
   };
 
   const handleMouseEnterPlayer = (playerRef: React.MutableRefObject<YT.Player | null>) => {
@@ -590,6 +619,7 @@ export default function TournamentLivePage() {
                     className="w-full max-w-xs mx-auto px-4 py-2.5 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500"
                     disabled={initialItems.length < 2}
                 >
+                    <option value="all">Tous ({initialItems.length})</option>
                     {getValidTournamentSizes.map(size => (
                         <option key={size} value={size.toString()}>{size} participants</option>
                     ))}
