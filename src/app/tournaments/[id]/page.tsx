@@ -27,27 +27,6 @@ async function getTournament(id: string) {
   return tournament;
 }
 
-// Générer les métadonnées dynamiquement
-export async function generateMetadata(
-  params: Promise<{ id: string }>,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
-    const {id} = await params;
-    const tournament = await getTournament(id).catch(() => null); // Gérer le cas où getTournament lance notFound
-
-  if (!tournament) {
-    return {
-      title: 'Tournoi non trouvé',
-    };
-  }
-
-  return {
-    title: `${tournament.title} - Flex Tournaments`,
-    description: tournament.description || `Détails et gestion du tournoi ${tournament.title}.`,
-  };
-}
-
-
 export default async function TournamentPage({
   params,
 }: {
