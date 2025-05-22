@@ -29,10 +29,9 @@ async function getTournament(id: string) {
 
 // Générer les métadonnées dynamiquement
 export async function generateMetadata(
-  props: Promise<{params: {id: string}}>,
+  { params }: { params: { id: string } },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-    const {params} = await props;
     const id = params.id;
     const tournament = await getTournament(id).catch(() => null); // Gérer le cas où getTournament lance notFound
 
@@ -49,8 +48,11 @@ export async function generateMetadata(
 }
 
 
-export default async function TournamentPage(props: Promise<{ params: { id: string } }>) {
-    const {params} = await props;
+export default async function TournamentPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const tournament = await getTournament(params.id);
 
   // Statut initial du tournoi (vous ajouterez un champ statut à votre modèle Tournament plus tard)
