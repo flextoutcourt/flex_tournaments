@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../node_modules/.prisma/client" // Optionnel: spécifier le chemin de sortie si besoin
+}
+
+datasource db {
+  provider = "postgresql" // Ou "mysql", "sqlite", "sqlserver" selon votre BDD
+  url      = env("DATABASE_URL")
+}
+
+// Modèle pour les Tournois
+model Tournament {
+  id             String   @id @default(cuid())
+  title           String   @unique // Le nom du tournoi devrait être unique pour une meilleure identification
+  description    String?  // Description optionnelle du tournoi
+  status         Status @default(SETUP)   // Statut du tournoi (ex: "en cours", "terminé", etc.)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  Items          Item[]   // Liste des items participant à ce tournoi
+}
+
+enum Status {
+  SETUP
+  LIVE
+}
+
+// Modèle pour les Items (participants du tournoi)
+model Item {
+  id             String   @id @default(cuid())
+  name           String   // Nom de l'item
+  youtubeUrl     String?  // Lien vers la vidéo YouTube de l'item (optionnel)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tournamentId   String
+  tournament     Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // Si un tournoi est supprimé, ses items le sont aussi
+
+  @@index([tournamentId]) // Index pour optimiser les requêtes sur le tournoi
+}
