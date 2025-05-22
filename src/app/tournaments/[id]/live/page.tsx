@@ -181,12 +181,12 @@ export default function TournamentLivePage() {
   }, []);
 
 
-  // Initialize and destroy YouTube players
+  // Initialize or update YouTube players
   useEffect(() => {
     const videoId1 = activeMatch?.item1?.youtubeVideoId;
     const videoId2 = activeMatch?.item2?.youtubeVideoId;
 
-    const cleanupPlayer = (playerRef: React.MutableRefObject<YT.Player | null>, playerName: string) => {
+    const cleanupAndDestroyPlayer = (playerRef: React.MutableRefObject<YT.Player | null>, playerName: string) => {
         if (playerRef.current && typeof playerRef.current.destroy === 'function') {
             try {
                 const iframe = playerRef.current.getIframe();
@@ -203,96 +203,87 @@ export default function TournamentLivePage() {
         }
     };
 
-    if (!ytApiReady) {
-      console.log("YT Player Effect: API non prête. Nettoyage des joueurs existants.");
-      cleanupPlayer(player1Ref, "Player 1");
-      cleanupPlayer(player2Ref, "Player 2");
-      return;
-    }
-
-    if (!activeMatch) {
-      console.log("YT Player Effect: Pas de match actif. Nettoyage des joueurs existants.");
-      cleanupPlayer(player1Ref, "Player 1");
-      cleanupPlayer(player2Ref, "Player 2");
-      return;
-    }
-    
-    console.log(`YT Player Effect: Exécution. API Prête: ${ytApiReady}. Match: ${activeMatch.item1.name} (ID1: ${videoId1}) vs ${activeMatch.item2.name} (ID2: ${videoId2})`);
-
-    const createPlayer = (elementId: string, videoIdToLoad: string | null | undefined, playerRef: React.MutableRefObject<YT.Player | null>) => {
+    const updateOrCreatePlayer = (elementId: string, videoIdToLoad: string | null | undefined, playerRef: React.MutableRefObject<YT.Player | null>) => {
       const targetElement = document.getElementById(elementId);
-      
-      cleanupPlayer(playerRef, `Ancien ${elementId}`); 
+      if (!targetElement) {
+        console.error(`YT Player Effect: Élément cible ${elementId} NON TROUVÉ.`);
+        cleanupAndDestroyPlayer(playerRef, `Player pour cible manquante ${elementId}`);
+        return;
+      }
 
-      if (videoIdToLoad && targetElement) {
-        // S'assurer que le div est vide avant de créer un nouveau lecteur
-        while (targetElement.firstChild) {
-            targetElement.removeChild(targetElement.firstChild);
-            console.log(`YT Player Effect: Enfant retiré de ${elementId} avant la création du lecteur.`);
-        }
+      if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
+        console.error(`YT Player Effect: Objet YT ou YT.Player non défini. API peut-être pas chargée. Cible: ${elementId}`);
+        setError("L'API YouTube n'a pas pu être chargée correctement. Veuillez rafraîchir.");
+        return;
+      }
 
-        console.log(`YT Player Effect: Tentative de création du lecteur pour ${elementId} avec videoId ${videoIdToLoad}. Élément trouvé et vidé:`, targetElement);
-        if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
-            console.error(`YT Player Effect: Objet YT ou YT.Player non défini lors de la tentative de création du lecteur pour ${elementId}. L'API a peut-être échoué à se charger.`);
-            setError("L'API YouTube n'a pas pu être chargée correctement. Veuillez rafraîchir la page.");
-            return;
-        }
-        try {
+      if (videoIdToLoad) {
+        if (playerRef.current) { // Le lecteur existe déjà
+          console.log(`YT Player Effect: Lecteur existant pour ${elementId}. Tentative de chargement de la vidéo: ${videoIdToLoad}`);
+          try {
+            // Vérifier si la vidéo est différente avant de charger pour éviter rechargement inutile
+            // Note: playerRef.current.getVideoData().video_id n'est pas toujours fiable ou disponible immédiatement.
+            // Une approche plus simple est de charger, ou de stocker l'ID chargé précédemment.
+            // Pour cet exemple, on charge si l'ID est différent.
+            // Si vous voulez être plus sûr, vous pouvez stocker l'ID chargé dans un état ou une ref séparée.
+            // if (playerRef.current.getVideoUrl().includes(videoIdToLoad)) { // Méthode non fiable
+            //   console.log(`YT Player Effect: Vidéo ${videoIdToLoad} déjà chargée dans ${elementId}.`);
+            //   return;
+            // }
+            playerRef.current.loadVideoById(videoIdToLoad);
+            console.log(`YT Player Effect: loadVideoById appelé pour ${elementId} avec ${videoIdToLoad}`);
+          } catch (e) {
+            console.error(`YT Player Effect: Erreur lors de loadVideoById pour ${elementId}. Recréation.`, e);
+            cleanupAndDestroyPlayer(playerRef, `Recréation de ${elementId} après échec loadVideoById`);
+            // Assurer que le div est vide
+            while (targetElement.firstChild) { targetElement.removeChild(targetElement.firstChild); }
+            playerRef.current = new YT.Player(elementId, { /* ... options ... */ videoId: videoIdToLoad, playerVars: { origin: window.location.origin } });
+          }
+        } else { // Le lecteur n'existe pas, il faut le créer
+          console.log(`YT Player Effect: Création d'un nouveau lecteur pour ${elementId} avec videoId ${videoIdToLoad}.`);
+          while (targetElement.firstChild) { targetElement.removeChild(targetElement.firstChild); } // Vider le conteneur
+          try {
             playerRef.current = new YT.Player(elementId, {
               videoId: videoIdToLoad,
-              height: '100%',
-              width: '100%',
-              playerVars: {
-                autoplay: 0, controls: 1, modestbranding: 1, rel: 0, showinfo: 0, fs: 1,
-                origin: typeof window !== 'undefined' ? window.location.origin : '', 
-              },
+              height: '100%', width: '100%',
+              playerVars: { autoplay: 0, controls: 1, modestbranding: 1, rel: 0, showinfo: 0, fs: 1, origin: window.location.origin },
               events: {
-                'onReady': (event) => console.log(`YT Player: Lecteur ${elementId} prêt. Vidéo: ${videoIdToLoad}`),
-                'onError': (event) => {
-                    console.error(`YT Player: Erreur du lecteur ${elementId} (code ${event.data}) pour Video ID: ${videoIdToLoad}`);
-                    // Afficher une erreur plus visible à l'utilisateur si le lecteur échoue
-                    const errorMessages: {[key: number]: string} = {
-                        2: "Requête invalide (ex: ID vidéo mal formé).",
-                        5: "Erreur liée au lecteur HTML5.",
-                        100: "Vidéo non trouvée ou privée.",
-                        101: "Lecture interdite par le propriétaire de la vidéo dans les lecteurs intégrés.",
-                        150: "Lecture interdite par le propriétaire de la vidéo dans les lecteurs intégrés (identique à 101)."
-                    };
-                    setError(`Erreur YouTube (${elementId}): ${errorMessages[event.data] || 'Erreur inconnue du lecteur.'}`);
-                }
+                'onReady': () => console.log(`YT Player: Lecteur ${elementId} prêt (nouvelle instance). Vidéo: ${videoIdToLoad}`),
+                'onError': (event) => console.error(`YT Player: Erreur du lecteur ${elementId} (nouvelle instance):`, event.data, `Video ID: ${videoIdToLoad}`)
               }
             });
-        } catch (e) {
-            console.error(`YT Player Effect: Erreur lors de l'instanciation de YT.Player pour ${elementId} avec videoId ${videoIdToLoad}:`, e);
+          } catch (e) {
+            console.error(`YT Player Effect: Erreur lors de l'instanciation de YT.Player pour ${elementId}`, e);
+          }
         }
-      } else if (videoIdToLoad && !targetElement) {
-        console.error(`YT Player Effect: Élément cible ${elementId} NON TROUVÉ dans le DOM pour la vidéo ${videoIdToLoad}. Le lecteur ne sera pas créé.`);
-      } else if (!videoIdToLoad) {
-        console.log(`YT Player Effect: Pas de videoId pour ${elementId}, lecteur non créé (déjà nettoyé).`);
+      } else { // Pas de videoIdToLoad, donc nettoyer le lecteur s'il existe
+        console.log(`YT Player Effect: Pas de videoId pour ${elementId}. Nettoyage du lecteur existant.`);
+        cleanupAndDestroyPlayer(playerRef, `Player ${elementId} (pas de videoId)`);
       }
     };
-    
-    let rafId: number;
-    const initializePlayers = () => {
-        console.log("YT Player Effect: Initialisation des lecteurs via requestAnimationFrame.");
-        createPlayer('youtube-player-1', videoId1, player1Ref);
-        createPlayer('youtube-player-2', videoId2, player2Ref);
-    };
 
-    if (videoId1 || videoId2) {
-        rafId = requestAnimationFrame(initializePlayers);
-    } else { 
-        cleanupPlayer(player1Ref, "Player 1 (pas de videoId1)");
-        cleanupPlayer(player2Ref, "Player 2 (pas de videoId2)");
+    if (!ytApiReady) {
+      console.log("YT Player Effect: API non prête. Nettoyage des joueurs et retour.");
+      cleanupAndDestroyPlayer(player1Ref, "Player 1 (API non prête)");
+      cleanupAndDestroyPlayer(player2Ref, "Player 2 (API non prête)");
+      return;
     }
+    
+    // Mettre à jour/créer les lecteurs
+    // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+    const rafId = requestAnimationFrame(() => {
+        console.log(`YT Player Effect (dans RAF): Tentative de màj/création pour V1: ${videoId1}, V2: ${videoId2}`);
+        updateOrCreatePlayer('youtube-player-1', videoId1, player1Ref);
+        updateOrCreatePlayer('youtube-player-2', videoId2, player2Ref);
+    });
 
     return () => {
-      if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(rafId); 
-      console.log("YT Player Effect: Fonction de nettoyage exécutée (changement de dépendance ou démontage).");
-      cleanupPlayer(player1Ref, "Player 1 au nettoyage");
-      cleanupPlayer(player2Ref, "Player 2 au nettoyage");
+      cancelAnimationFrame(rafId);
+      console.log("YT Player Effect: Fonction de nettoyage principale (démontage ou changement de dépendance majeur).");
+      cleanupAndDestroyPlayer(player1Ref, "Player 1 (nettoyage principal)");
+      cleanupAndDestroyPlayer(player2Ref, "Player 2 (nettoyage principal)");
     };
-  }, [activeMatch?.item1?.youtubeVideoId, activeMatch?.item2?.youtubeVideoId, ytApiReady]); 
+  }, [activeMatch?.item1?.youtubeVideoId, activeMatch?.item2?.youtubeVideoId, ytApiReady]);
 
 
   // 1. Charger les données initiales depuis sessionStorage
@@ -794,7 +785,8 @@ export default function TournamentLivePage() {
                     className="aspect-video rounded-lg overflow-hidden mb-4 shadow-lg bg-black" 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
                   >
-                    <div key={`player1-container-${activeMatch.item1.youtubeVideoId}`} id="youtube-player-1" className="w-full h-full"></div>
+                    {/* Clé unique retirée ici pour tenter de réutiliser l'élément DOM */}
+                    <div id="youtube-player-1" className="w-full h-full"></div>
                   </motion.div>
                 ) : activeMatch.item1.youtubeUrl && (
                    <a href={activeMatch.item1.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline mb-3 inline-flex items-center justify-center w-full py-2 bg-gray-600 rounded-md hover:bg-gray-500"><FaYoutube className="mr-2"/>Lien YouTube</a>
@@ -833,7 +825,8 @@ export default function TournamentLivePage() {
                     className="aspect-video rounded-lg overflow-hidden mb-4 shadow-lg bg-black" 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
                   >
-                    <div key={`player2-container-${activeMatch.item2.youtubeVideoId}`} id="youtube-player-2" className="w-full h-full"></div>
+                     {/* Clé unique retirée ici pour tenter de réutiliser l'élément DOM */}
+                    <div id="youtube-player-2" className="w-full h-full"></div>
                   </motion.div>
                 ) : activeMatch.item2.youtubeUrl && (
                    <a href={activeMatch.item2.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline mb-3 inline-flex items-center justify-center w-full py-2 bg-gray-600 rounded-md hover:bg-gray-500"><FaYoutube className="mr-2"/>Lien YouTube</a>
