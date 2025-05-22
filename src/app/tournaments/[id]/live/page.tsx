@@ -69,39 +69,40 @@ const winnerMessageVariants = {
 };
 
 // YouTube Player API global setup
-const YOUTUBE_API_SCRIPT_URL = "https://www.youtube.com/embed/8Bkgi6yB6P8?autoplay=0&controls=1&modestbranding=1&rel=0&showinfo=0&fs=1&origin=https%3A%2F%2Ftournaments.flex-central.com&enablejsapi=1&widgetid=6&forigin=https%3A%2F%2Ftournaments.flex-central.com%2Ftournaments%2Fcmayur2bk0001pbjjgu43590d%2Flive%3Fchannel%3Dluniqueflex&aoriginsup=1&gporigin=https%3A%2F%2Ftournaments.flex-central.com%2Ftournaments%2Fcmayur2bk0001pbjjgu43590d&vf=6"; // URL fournie par l'utilisateur
+const YOUTUBE_API_SCRIPT_URL = "https://www.youtube.com/iframe_api"; // URL standard de l'API Iframe
 
-if (typeof window !== 'undefined' && !(window as any).onYouTubeIframeAPIReadyLoaded) {
-  // Utiliser un drapeau différent pour éviter les conflits si onYouTubeIframeAPIReady est défini par ailleurs
-  (window as any).onYouTubeIframeAPIReadyLoaded = true; 
-  (window as any).onYouTubeIframeAPIReady = () => {
-    (window as any).isYouTubeApiReady = true;
-    window.dispatchEvent(new Event('youtubeApiReady'));
-    console.log(`GLOBAL: onYouTubeIframeAPIReady (from ${YOUTUBE_API_SCRIPT_URL}) fired and event dispatched.`);
-  };
-  
-  // Vérifier si le script spécifique est déjà dans le DOM
+if (typeof window !== 'undefined') {
+  // S'assurer que la fonction onYouTubeIframeAPIReady est définie globalement AVANT d'ajouter le script
+  if (typeof (window as any).onYouTubeIframeAPIReady !== 'function') {
+    (window as any).onYouTubeIframeAPIReady = () => {
+      console.log(`GLOBAL: onYouTubeIframeAPIReady (from ${YOUTUBE_API_SCRIPT_URL}) a été appelée.`);
+      (window as any).isYouTubeApiReadyState = true; 
+      window.dispatchEvent(new Event('youtubeApiReadyEvent')); 
+      console.log(`GLOBAL: Événement 'youtubeApiReadyEvent' distribué.`);
+    };
+  }
+
+  // Ajouter le script seulement s'il n'est pas déjà là
   if (!document.querySelector(`script[src="${YOUTUBE_API_SCRIPT_URL}"]`)) {
     const tag = document.createElement('script');
     tag.src = YOUTUBE_API_SCRIPT_URL;
-    tag.async = true; // Charger de manière asynchrone
+    tag.async = true; 
     const firstScriptTag = document.getElementsByTagName('script')[0];
     if (firstScriptTag && firstScriptTag.parentNode) {
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-        console.log(`GLOBAL: Appending YouTube API script: ${YOUTUBE_API_SCRIPT_URL}`);
+        console.log(`GLOBAL: Ajout du script API YouTube : ${YOUTUBE_API_SCRIPT_URL}`);
     } else {
-        document.head.appendChild(tag); // Fallback si aucun script n'est trouvé
-        console.log(`GLOBAL: Appending YouTube API script (fallback to head): ${YOUTUBE_API_SCRIPT_URL}`);
+        document.head.appendChild(tag); 
+        console.log(`GLOBAL: Ajout du script API YouTube (fallback sur head) : ${YOUTUBE_API_SCRIPT_URL}`);
     }
   } else {
-    console.log(`GLOBAL: YouTube API script ${YOUTUBE_API_SCRIPT_URL} already present.`);
-    // Si le script est déjà là mais que l'API n'est pas prête, onYouTubeIframeAPIReady pourrait ne pas avoir été appelé
-    // ou isYouTubeApiReady n'est pas défini. Cela peut arriver avec le HMR.
-    // On peut essayer de forcer la vérification si l'objet YT existe déjà.
-    if (typeof YT !== 'undefined' && YT.Player && !(window as any).isYouTubeApiReady) {
-        console.log("GLOBAL: YT object exists but isYouTubeApiReady flag not set. Setting it now.");
-        (window as any).isYouTubeApiReady = true;
-        window.dispatchEvent(new Event('youtubeApiReady'));
+    console.log(`GLOBAL: Le script API YouTube ${YOUTUBE_API_SCRIPT_URL} est déjà présent.`);
+    // Si le script est là mais que l'API n'est pas prête (ex: HMR, ou si onYouTubeIframeAPIReady a été défini après le chargement du script)
+    // et que l'objet YT est déjà disponible, on peut considérer l'API comme prête.
+    if (typeof YT !== 'undefined' && YT.Player && !(window as any).isYouTubeApiReadyState) {
+        console.log("GLOBAL: Objet YT existe mais le drapeau isYouTubeApiReadyState n'est pas défini. Définition et distribution de l'événement.");
+        (window as any).isYouTubeApiReadyState = true;
+        window.dispatchEvent(new Event('youtubeApiReadyEvent'));
     }
   }
 }
@@ -131,7 +132,7 @@ export default function TournamentLivePage() {
   const [isTournamentActive, setIsTournamentActive] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false); 
 
-  const [ytApiReady, setYtApiReady] = useState(typeof window !== 'undefined' && (window as any).isYouTubeApiReady === true);
+  const [ytApiReady, setYtApiReady] = useState(typeof window !== 'undefined' && (window as any).isYouTubeApiReadyState === true);
   const player1Ref = useRef<YT.Player | null>(null);
   const player2Ref = useRef<YT.Player | null>(null);
 
@@ -166,19 +167,20 @@ export default function TournamentLivePage() {
   // Listener for YouTube API ready event
   useEffect(() => {
     const handleApiReady = () => {
-        console.log("YT API Listener: API is ready.");
+        console.log("YT API Listener (Component): API est prête.");
         setYtApiReady(true);
     };
-    if ((window as any).isYouTubeApiReady) { 
-        console.log("YT API Listener: API was already ready.");
+
+    if ((window as any).isYouTubeApiReadyState) { 
+        console.log("YT API Listener (Component): API était déjà prête à l'initialisation.");
         handleApiReady();
     } else {
-        console.log("YT API Listener: Adding event listener for youtubeApiReady.");
-        window.addEventListener('youtubeApiReady', handleApiReady);
+        console.log("YT API Listener (Component): Ajout de l'écouteur d'événement pour 'youtubeApiReadyEvent'.");
+        window.addEventListener('youtubeApiReadyEvent', handleApiReady);
     }
     return () => {
-        console.log("YT API Listener: Removing event listener for youtubeApiReady.");
-        window.removeEventListener('youtubeApiReady', handleApiReady);
+        console.log("YT API Listener (Component): Suppression de l'écouteur d'événement pour 'youtubeApiReadyEvent'.");
+        window.removeEventListener('youtubeApiReadyEvent', handleApiReady);
     };
   }, []);
 
@@ -191,41 +193,44 @@ export default function TournamentLivePage() {
     const cleanupPlayer = (playerRef: React.MutableRefObject<YT.Player | null>, playerName: string) => {
         if (playerRef.current && typeof playerRef.current.destroy === 'function') {
             try {
-                playerRef.current.destroy();
-                console.log(`YT Player Effect: ${playerName} destroyed.`);
+                if (playerRef.current.getIframe() && document.body.contains(playerRef.current.getIframe())) {
+                    playerRef.current.destroy();
+                    console.log(`YT Player Effect: ${playerName} détruit.`);
+                } else {
+                    console.log(`YT Player Effect: Iframe de ${playerName} non trouvée ou déjà retirée du DOM. Destruction annulée.`);
+                }
             } catch (e) {
-                console.warn(`YT Player Effect: Error destroying ${playerName}`, e);
+                console.warn(`YT Player Effect: Erreur lors de la destruction de ${playerName}`, e);
             }
             playerRef.current = null;
         }
     };
 
     if (!ytApiReady) {
-      console.log("YT Player Effect: API not ready. Ensuring players are cleaned up if they exist.");
+      console.log("YT Player Effect: API non prête. Nettoyage des joueurs existants.");
       cleanupPlayer(player1Ref, "Player 1");
       cleanupPlayer(player2Ref, "Player 2");
       return;
     }
 
     if (!activeMatch) {
-      console.log("YT Player Effect: No active match. Ensuring players are cleaned up if they exist.");
+      console.log("YT Player Effect: Pas de match actif. Nettoyage des joueurs existants.");
       cleanupPlayer(player1Ref, "Player 1");
       cleanupPlayer(player2Ref, "Player 2");
       return;
     }
     
-    console.log(`YT Player Effect: Running. API Ready: ${ytApiReady}. Match: ${activeMatch.item1.name} (ID1: ${videoId1}) vs ${activeMatch.item2.name} (ID2: ${videoId2})`);
+    console.log(`YT Player Effect: Exécution. API Prête: ${ytApiReady}. Match: ${activeMatch.item1.name} (ID1: ${videoId1}) vs ${activeMatch.item2.name} (ID2: ${videoId2})`);
 
     const createPlayer = (elementId: string, videoIdToLoad: string | null | undefined, playerRef: React.MutableRefObject<YT.Player | null>) => {
       const targetElement = document.getElementById(elementId);
       
-      cleanupPlayer(playerRef, `Previous ${elementId}`);
+      cleanupPlayer(playerRef, `Ancien ${elementId}`); 
 
       if (videoIdToLoad && targetElement) {
-        console.log(`YT Player Effect: Attempting to create player for ${elementId} with videoId ${videoIdToLoad}. Element found:`, targetElement);
-        // Vérifier si l'API YT est disponible globalement
+        console.log(`YT Player Effect: Tentative de création du lecteur pour ${elementId} avec videoId ${videoIdToLoad}. Élément trouvé:`, targetElement);
         if (typeof YT === 'undefined' || typeof YT.Player === 'undefined') {
-            console.error(`YT Player Effect: YT object or YT.Player is not defined when trying to create player for ${elementId}. API might not be fully loaded or failed.`);
+            console.error(`YT Player Effect: Objet YT ou YT.Player non défini lors de la tentative de création du lecteur pour ${elementId}. L'API a peut-être échoué à se charger.`);
             setError("L'API YouTube n'a pas pu être chargée correctement. Veuillez rafraîchir la page.");
             return;
         }
@@ -236,26 +241,26 @@ export default function TournamentLivePage() {
               width: '100%',
               playerVars: {
                 autoplay: 0, controls: 1, modestbranding: 1, rel: 0, showinfo: 0, fs: 1,
-                origin: typeof window !== 'undefined' ? window.location.origin : '',
+                origin: typeof window !== 'undefined' ? window.location.origin : '', 
               },
               events: {
-                'onReady': (event) => console.log(`YT Player: Player ${elementId} ready. Video: ${videoIdToLoad}`),
-                'onError': (event) => console.error(`YT Player: Player ${elementId} error:`, event.data, `Video ID: ${videoIdToLoad}`)
+                'onReady': (event) => console.log(`YT Player: Lecteur ${elementId} prêt. Vidéo: ${videoIdToLoad}`),
+                'onError': (event) => console.error(`YT Player: Erreur du lecteur ${elementId}:`, event.data, `Video ID: ${videoIdToLoad}`)
               }
             });
         } catch (e) {
-            console.error(`YT Player Effect: Error instantiating YT.Player for ${elementId} with videoId ${videoIdToLoad}:`, e);
+            console.error(`YT Player Effect: Erreur lors de l'instanciation de YT.Player pour ${elementId} avec videoId ${videoIdToLoad}:`, e);
         }
       } else if (videoIdToLoad && !targetElement) {
-        console.error(`YT Player Effect: Target element ${elementId} NOT FOUND in DOM for video ${videoIdToLoad}. Player will not be created.`);
+        console.error(`YT Player Effect: Élément cible ${elementId} NON TROUVÉ dans le DOM pour la vidéo ${videoIdToLoad}. Le lecteur ne sera pas créé.`);
       } else if (!videoIdToLoad) {
-        console.log(`YT Player Effect: No videoId for ${elementId}, player not created (already cleaned up).`);
+        console.log(`YT Player Effect: Pas de videoId pour ${elementId}, lecteur non créé (déjà nettoyé).`);
       }
     };
     
     let rafId: number;
     const initializePlayers = () => {
-        console.log("YT Player Effect: Initializing players via requestAnimationFrame.");
+        console.log("YT Player Effect: Initialisation des lecteurs via requestAnimationFrame.");
         createPlayer('youtube-player-1', videoId1, player1Ref);
         createPlayer('youtube-player-2', videoId2, player2Ref);
     };
@@ -263,16 +268,15 @@ export default function TournamentLivePage() {
     if (videoId1 || videoId2) {
         rafId = requestAnimationFrame(initializePlayers);
     } else { 
-        cleanupPlayer(player1Ref, "Player 1 (no videoId1)");
-        cleanupPlayer(player2Ref, "Player 2 (no videoId2)");
+        cleanupPlayer(player1Ref, "Player 1 (pas de videoId1)");
+        cleanupPlayer(player2Ref, "Player 2 (pas de videoId2)");
     }
 
-
     return () => {
-      cancelAnimationFrame(rafId); 
-      console.log("YT Player Effect: Cleanup function running (due to dependency change or unmount).");
-      cleanupPlayer(player1Ref, "Player 1 on cleanup");
-      cleanupPlayer(player2Ref, "Player 2 on cleanup");
+      if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(rafId); 
+      console.log("YT Player Effect: Fonction de nettoyage exécutée (changement de dépendance ou démontage).");
+      cleanupPlayer(player1Ref, "Player 1 au nettoyage");
+      cleanupPlayer(player2Ref, "Player 2 au nettoyage");
     };
   }, [activeMatch?.item1?.youtubeVideoId, activeMatch?.item2?.youtubeVideoId, ytApiReady]); 
 
@@ -749,7 +753,7 @@ export default function TournamentLivePage() {
           </motion.div>
         ) : activeMatch ? (
           <motion.div 
-            key={activeMatch.item1.id + activeMatch.item2.id} 
+            key={activeMatch.item1.id + activeMatch.item2.id + activeMatch.roundNumber + activeMatch.matchNumberInRound} // Clé plus unique pour forcer le re-render
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -776,7 +780,8 @@ export default function TournamentLivePage() {
                     className="aspect-video rounded-lg overflow-hidden mb-4 shadow-lg bg-black" 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
                   >
-                    <div id="youtube-player-1" className="w-full h-full"></div>
+                    {/* Clé unique pour forcer le re-montage du div si la vidéo change */}
+                    <div key={`player1-${activeMatch.item1.youtubeVideoId}`} id="youtube-player-1" className="w-full h-full"></div>
                   </motion.div>
                 ) : activeMatch.item1.youtubeUrl && (
                    <a href={activeMatch.item1.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline mb-3 inline-flex items-center justify-center w-full py-2 bg-gray-600 rounded-md hover:bg-gray-500"><FaYoutube className="mr-2"/>Lien YouTube</a>
@@ -815,7 +820,8 @@ export default function TournamentLivePage() {
                     className="aspect-video rounded-lg overflow-hidden mb-4 shadow-lg bg-black" 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
                   >
-                    <div id="youtube-player-2" className="w-full h-full"></div>
+                     {/* Clé unique pour forcer le re-montage du div si la vidéo change */}
+                    <div key={`player2-${activeMatch.item2.youtubeVideoId}`} id="youtube-player-2" className="w-full h-full"></div>
                   </motion.div>
                 ) : activeMatch.item2.youtubeUrl && (
                    <a href={activeMatch.item2.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline mb-3 inline-flex items-center justify-center w-full py-2 bg-gray-600 rounded-md hover:bg-gray-500"><FaYoutube className="mr-2"/>Lien YouTube</a>
