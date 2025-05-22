@@ -39,8 +39,8 @@ async function getTournaments(): Promise<TournamentListItem[]> {
 }
 
 export const metadata: Metadata = {
-  title: 'Liste des Tournois - TournoiMaster',
-  description: 'Parcourez tous les tournois créés sur TournoiMaster.',
+  title: 'Liste des Tournois - Flex Tournaments',
+  description: 'Parcourez tous les tournois créés sur Flex Tournaments.',
 };
 
 export default async function TournamentsPage() {

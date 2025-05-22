@@ -29,11 +29,12 @@ async function getTournament(id: string) {
 
 // Générer les métadonnées dynamiquement
 export async function generateMetadata(
-  { params }: {params: {id: string}},
+  props: Promise<{params: {id: string}}>,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const id = params.id;
-  const tournament = await getTournament(id).catch(() => null); // Gérer le cas où getTournament lance notFound
+    const {params} = await props;
+    const id = params.id;
+    const tournament = await getTournament(id).catch(() => null); // Gérer le cas où getTournament lance notFound
 
   if (!tournament) {
     return {
@@ -42,7 +43,7 @@ export async function generateMetadata(
   }
 
   return {
-    title: `${tournament.title} - TournoiMaster`,
+    title: `${tournament.title} - Flex Tournaments`,
     description: tournament.description || `Détails et gestion du tournoi ${tournament.title}.`,
   };
 }

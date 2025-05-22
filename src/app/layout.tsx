@@ -24,7 +24,7 @@ export default function RootLayout({
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center">
                 <Link href="/" className="text-2xl font-bold text-purple-400 hover:text-purple-300 transition-colors">
-                  🏆 TournoiMaster
+                  🏆 Flex Tournaments
                 </Link>
               </div>
               <div className="flex items-center space-x-4 sm:space-x-6">
@@ -49,7 +49,7 @@ export default function RootLayout({
 
         <footer className="bg-gray-800 text-center py-6 shadow-top">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} TournoiMaster par VotreNom. Tous droits réservés.
+            &copy; {new Date().getFullYear()} Flex Tournaments par VotreNom. Tous droits réservés.
           </p>
           <p className="text-xs text-gray-500 mt-1">
             Propulsé par Next.js & Prisma

@@ -15,7 +15,7 @@ export default function HomePage() {
             <FaTrophy className="h-12 w-12 text-purple-400" />
         </div>
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight">
-          Bienvenue sur <span className="text-purple-400">TournoiMaster</span>
+          Bienvenue sur <span className="text-purple-400">Flex Tournaments</span>
         </h1>
         <p className="mt-6 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
           La plateforme ultime pour organiser des tournois épiques et laisser votre communauté Twitch décider des vainqueurs en temps réel !
@@ -99,6 +99,6 @@ export default function HomePage() {
 // Optionnel: Ajouter des métadonnées spécifiques à cette page
 // import type { Metadata } from 'next'
 // export const metadata: Metadata = {
-//   title: 'Accueil - TournoiMaster',
+//   title: 'Accueil - Flex Tournaments',
 //   description: 'Créez et gérez des tournois Twitch interactifs.',
 // }
