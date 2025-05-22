@@ -29,10 +29,10 @@ async function getTournament(id: string) {
 
 // Générer les métadonnées dynamiquement
 export async function generateMetadata(
-  { params }: { params: { id: string } },
+  params: Promise<{ id: string }>,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-    const id = params.id;
+    const {id} = await params;
     const tournament = await getTournament(id).catch(() => null); // Gérer le cas où getTournament lance notFound
 
   if (!tournament) {
@@ -53,11 +53,9 @@ export default async function TournamentPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-    const {id} = await params;
+  const {id} = await params;
   const tournament = await getTournament(id);
 
-  // Statut initial du tournoi (vous ajouterez un champ statut à votre modèle Tournament plus tard)
-  // Pour l'instant, on simule : 'SETUP', 'PUBLISHED', 'ACTIVE', 'FINISHED'
   // @ts-ignore // TODO: Remove ts-ignore once 'status' is added to the Tournament model in Prisma
   const currentStatus = tournament.status || 'SETUP'; // Supposons un champ 'status' dans votre modèle Tournament
 
