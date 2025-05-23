@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+      <body className="bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-gray-100 min-h-screen flex flex-col">
         <header className="bg-gray-800 shadow-lg sticky top-0 z-50">
           <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -47,7 +47,7 @@ export default function RootLayout({
           {children}
         </main>
 
-        <footer className="bg-gray-800 text-center py-6 shadow-top">
+        <footer className="bg-gray-100 text-center py-6 shadow-top">
           <p className="text-sm text-gray-400">
             &copy; {new Date().getFullYear()} Flex Tournaments par VotreNom. Tous droits réservés.
           </p>
