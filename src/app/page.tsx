@@ -9,13 +9,13 @@ import { FaSprayCanSparkles } from 'react-icons/fa6';
 export default function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center text-center">
-      <header className="my-12 md:my-16">
+      <header className="my-12 md:my-16 bg-gray-800/75 backdrop-blur-md p-8 rounded-xl w-full">
         <div className="inline-block p-3 mb-6 bg-purple-500/20 rounded-full">
             {/* Icône de trophée avec React-Icons */}
             <FaTrophy className="h-12 w-12 text-purple-400" />
         </div>
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight">
-          Bienvenue sur <span className="text-purple-400">Flex Tournaments</span>
+          <strong className="text-purple-500 uppercase">Flex Tournaments</strong>
         </h1>
         <p className="mt-6 text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
           La plateforme ultime pour organiser des tournois épiques et laisser votre communauté Twitch décider des vainqueurs en temps réel !

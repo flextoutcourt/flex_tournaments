@@ -52,7 +52,7 @@ export default async function TournamentPage({
           </div>
           <div className="flex space-x-3 mt-4 md:mt-0">
             {/* Bouton d'édition (à implémenter) */}
-            <Link href={`/tournament/${tournament.id}/edit`} className="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors">
+            <Link href={`/tournaments/${tournament.id}/edit`} className="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors">
               <FaEdit className="mr-2 h-4 w-4" /> Éditer
             </Link>
             {/* Statut actuel (à rendre plus dynamique) */}

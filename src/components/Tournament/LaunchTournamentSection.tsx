@@ -165,9 +165,9 @@ export default function LaunchTournamentSection({ tournamentId, tournamentTitle 
               Préparation...
             </>
           ) : (
-            <Link href={`/tournaments/${tournamentId}/live?channel=${encodeURIComponent(twitchChannel.trim())}`} className="flex items-center">
+            <p className="flex items-center">
               <FaRocket className="mr-2" /> Lancer le Tournoi
-            </Link>
+            </p>
           )}
         </button>
          {fetchedItems.length < 2 && !isLoadingItems && <p className="text-xs text-yellow-400 mt-1">Au moins 2 participants sont requis pour lancer le tournoi.</p>}

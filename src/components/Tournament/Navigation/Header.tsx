@@ -19,16 +19,13 @@ const TournamentHeader: React.FC<TournamentHeaderProps> = ({ title, liveTwitchCh
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, ease: "easeOut" }}
-      className="w-auto text-left mb-6 md:mb-10 fixed top-5 left-5 mx-auto px-4 py-6 bg-gray-900/80 backdrop-blur-md rounded-lg shadow-lg z-50"
+      className="w-auto text-left mb-6 md:mb-10 fixed bottom-5 left-5 mx-auto p-2 bg-gray-900/80 backdrop-blur-md rounded-xl shadow-lg z-50"
     >
-      <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-3">
-        {"Live"}
-      </h1>
-      <div className="flex items-center justify-center text-md sm:text-lg text-gray-300 bg-gray-800/50 px-4 py-2 rounded-full shadow-md max-w-md mx-auto">
+      <div className="flex items-center justify-center text-md sm:text-lg text-gray-300 bg-gray-800/50 px-4 py-2 rounded-lg shadow-md max-w-md mx-auto">
         <FaTwitch className="mr-2 text-purple-400 text-xl" /> Canal: <span className="font-semibold ml-1.5">{liveTwitchChannel || "N/A"}</span>
         <span className="mx-3 text-gray-600">|</span>
         {isTmiConnected ?
-          <span className="text-green-400 flex items-center"><div className="h-2.5 w-2.5 bg-green-500 rounded-full mr-2 animate-pulse"></div>Connecté</span> :
+          <span className="text-green-400 flex items-center"><div className="h-2.5 w-2.5 bg-green-500 rounded-lg mr-2 animate-pulse"></div>Connecté</span> :
           <span className="text-yellow-400 flex items-center"><FaSpinner className="animate-spin mr-2" />Connexion...</span>
         }
       </div>

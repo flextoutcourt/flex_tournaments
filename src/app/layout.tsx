@@ -1,25 +1,86 @@
+"use client";
+
 // app/layout.tsx
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import '@/styles/globals.css'; // Assurez-vous d'avoir ce fichier pour les styles globaux (ex: Tailwind)
+import { NeatConfig, NeatGradient } from "@firecms/neat";
+import { useEffect, useRef } from 'react';
 
-export const metadata: Metadata = {
-  title: 'Application de Tournoi Twitch',
-  description: 'Créez et gérez des tournois interactifs avec des votes Twitch en temps réel.',
-  icons: { // Optionnel: ajoutez un favicon
-    icon: '/favicon.ico', // Assurez-vous que le fichier favicon.ico est dans votre dossier /public
-  },
-};
+import '@/styles/globals.css';
+
+// Define your config
+const config = {
+  colors: [
+      {
+          color: '#FF5772',
+          enabled: true,
+      },
+      {
+          color: '#4CB4BB',
+          enabled: true,
+      },
+      {
+          color: '#FFC600',
+          enabled: true,
+      },
+      {
+          color: '#8B6AE6',
+          enabled: true,
+      },
+      {
+          color: '#2E0EC7',
+          enabled: true,
+      },
+  ],
+  speed: 1.5,
+  horizontalPressure: 3,
+  verticalPressure: 4,
+  waveFrequencyX: 2,
+  waveFrequencyY: 3,
+  waveAmplitude: 5,
+  shadows: 1,
+  highlights: 5,
+  colorBrightness: 1,
+  colorSaturation: 7,
+  wireframe: false,
+  colorBlending: 8,
+  backgroundColor: '#003FFF',
+  backgroundAlpha: 1,
+  grainScale: 3,
+  grainSparsity: 0.02,
+  grainIntensity: 0.3,
+  grainSpeed: 1,
+  resolution: 1,
+  yOffset: 0,
+}
+
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const gradientRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    // La logique d'initialisation reste la même
+    if (gradientRef.current) {
+      const neat = new NeatGradient({
+        ref: gradientRef.current,
+        ...config
+      });
+      
+      // C'est une bonne pratique de retourner une fonction de nettoyage
+      return () => neat.destroy();
+    }
+  }, []);
+
   return (
     <html lang="fr">
       <body className="bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-gray-100 min-h-screen flex flex-col">
-        <header className="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <canvas id="neat-gradient-canvas" ref={gradientRef}></canvas>
+        <header className="bg-gray-800/75 backdrop-blur-md shadow-lg sticky top-2 mx-4 rounded-xl z-50">
           <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center">
@@ -29,14 +90,14 @@ export default function RootLayout({
               </div>
               <div className="flex items-center space-x-4 sm:space-x-6">
                 <Link href="/" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Accueil
+                  Home
                 </Link>
                 <Link href="/tournaments" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                  Voir les Tournois
+                  See tournaments
                 </Link>
                 {/* Vous pouvez ajouter d'autres liens ici, par exemple pour la création de tournoi si ce n'est pas sur l'accueil */}
                 <Link href="/tournaments/create" className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-md">
-                  Nouveau Tournoi
+                  New tournament
                 </Link>
               </div>
             </div>
@@ -47,12 +108,12 @@ export default function RootLayout({
           {children}
         </main>
 
-        <footer className="bg-gray-100 text-center py-6 shadow-top">
+        <footer className="bg-gray-900/75 backdrop-blur-md p-6 text-center shadow-lg mb-4 mx-4 rounded-xl z-50">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Flex Tournaments par VotreNom. Tous droits réservés.
+            &copy; {new Date().getFullYear()} Flex Tournaments by <strong className="text-purple-400">Flex</strong>. All rights reserved.
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            Propulsé par Next.js & Prisma
+            Powered by Next.js & Prisma
           </p>
         </footer>
       </body>
