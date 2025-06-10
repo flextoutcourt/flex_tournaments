@@ -1,58 +1,25 @@
 // app/tournaments/page.tsx
+'use client';
+
 import Link from 'next/link';
-import {prisma} from '@/lib/prisma'; // Assurez-vous que le chemin est correct
 import { FaListAlt, FaPlus, FaEye } from 'react-icons/fa';
 import { Metadata } from 'next';
+import useSWR from 'swr';
+import { fetcher } from '@/utils/fetcher';
 
 // Interface pour les données de chaque tournoi dans la liste
 interface TournamentListItem {
   id: string;
-  title: string; // Changé de name à title
+  title: string;
   description?: string | null;
   createdAt: Date;
-  // Vous pourriez ajouter un champ status ici si vous l'avez dans votre modèle
   _count?: {
-    Items: number; // Assurez-vous que le nom de la relation est correct (Items avec 'I' majuscule)
+    Items: number;
   };
 }
 
-// Fonction pour récupérer les données côté serveur
-async function getTournaments(): Promise<TournamentListItem[]> {
-  const tournamentsData = await prisma.tournament.findMany({
-    select: {
-      id: true,
-      title: true, // Changé de name à title
-      description: true,
-      createdAt: true,
-      _count: {
-        select: { Items: true }, // Compter les items associés
-      },
-      // Ajoutez 'status: true' si vous avez un champ status
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-  // Pas besoin de JSON.parse(JSON.stringify(tournamentsData)) ici
-  // car les dates seront gérées correctement par Next.js dans les Server Components.
-  return tournamentsData;
-}
-
-export const metadata: Metadata = {
-  title: 'Liste des Tournois - Flex Tournaments',
-  description: 'Parcourez tous les tournois créés sur Flex Tournaments.',
-};
-
-export default async function TournamentsPage() {
-  let tournaments: TournamentListItem[] = [];
-  let error: string | null = null;
-
-  try {
-    tournaments = await getTournaments();
-  } catch (e: any) {
-    console.error("Erreur lors de la récupération des tournois:", e);
-    error = "Impossible de charger la liste des tournois. Veuillez réessayer plus tard.";
-  }
+export default function TournamentsPage() {
+  const { data: tournaments, error, isLoading } = useSWR<TournamentListItem[]>('/api/tournaments', fetcher);
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -71,18 +38,25 @@ export default async function TournamentsPage() {
 
       {error && (
         <div className="bg-red-500/10 text-red-300 border border-red-500/30 p-4 rounded-md mb-6">
-          <p>{error}</p>
+          <p>Impossible de charger la liste des tournois. Veuillez réessayer plus tard.</p>
         </div>
       )}
 
-      {!error && tournaments.length === 0 && (
+      {isLoading && (
+        <div className="text-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Chargement des tournois...</p>
+        </div>
+      )}
+
+      {!isLoading && !error && (!tournaments || tournaments.length === 0) && (
         <div className="text-center py-10 bg-gray-800 rounded-lg shadow">
           <p className="text-xl text-gray-400 mb-4">Aucun tournoi trouvé pour le moment.</p>
           <p className="text-gray-500">Soyez le premier à en créer un !</p>
         </div>
       )}
 
-      {!error && tournaments.length > 0 && (
+      {!isLoading && !error && tournaments && tournaments.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tournaments.map((tournament) => (
             <div key={tournament.id} className="bg-gray-800 rounded-xl shadow-xl overflow-hidden flex flex-col hover:shadow-purple-500/30 transition-all duration-300 ease-in-out">
@@ -98,8 +72,6 @@ export default async function TournamentsPage() {
                 <div className="text-xs text-gray-500 mb-4">
                   <p>Créé le: {new Date(tournament.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                   <p>Participants: {tournament._count?.Items ?? 0}</p>
-                  {/* Afficher le statut si disponible */}
-                  {/* <p>Statut: <span className="font-semibold">{tournament.status || 'N/A'}</span></p> */}
                 </div>
               </div>
               <div className="p-6 bg-gray-700/50 border-t border-gray-700">
