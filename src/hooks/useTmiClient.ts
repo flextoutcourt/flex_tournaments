@@ -27,7 +27,7 @@ export function useTmiClient({
   const [isTmiConnected, setIsTmiConnected] = useState(false);
   const [tmiError, setTmiError] = useState<string | null>(null);
   
-  const votedUsers = useRef(new Set<string>());
+  const votedUsers = useRef(new Set<{username: string;votedItem: string}>());
 
   // Créer un identifiant stable pour le match actuel
   // Cet identifiant ne changera que si les participants ou le round/match changent réellement.
@@ -111,14 +111,18 @@ export function useTmiClient({
       console.log(`[TMI VOTE DEBUG] Message de ${username}: "${messageLower}". Match Actif ID (via closure): ${activeMatch.roundNumber}-${activeMatch.matchNumberInRound}-${activeMatch.item1.id}-${activeMatch.item2.id}. CurrentMatchIndex: ${currentMatchIndex}`);
       console.log(`[TMI VOTE DEBUG] Votants actuels pour ${username} (avant check):`, Array.from(votedUsers.current));
 
-      // if (votedUsers.current.has(username)) {
-      //   console.log(`[TMI VOTE DEBUG] ${username} a déjà voté pour ce match (ID: ${matchIdentifier}). Vote ignoré.`);
-      //   return;
-      // }
+      // Check if user has already voted
+      const hasVoted = Array.from(votedUsers.current).some(vote => vote.username === username);
+      if (hasVoted) {
+        console.log(`[TMI VOTE DEBUG] ${username} a déjà voté pour ce match (ID: ${matchIdentifier}). Vote ignoré.`);
+        return;
+      }
 
       let votedItem: 'item1' | 'item2' | null = null;
 
-      if (item1VoteKeywords.some(keyword => messageLower.includes(keyword))) {
+      console.log(item1VoteKeywords.some(keyword => messageLower == keyword));
+
+      if (item1VoteKeywords.some(keyword => messageLower == keyword)) {
         votedItem = 'item1';
         toast(`${username} à voté pour ${item1Name}`,
           {
@@ -131,7 +135,7 @@ export function useTmiClient({
             position: 'bottom-left'
           }
         );
-      } else if (item2VoteKeywords.some(keyword => messageLower.includes(keyword))) {
+      } else if (item2VoteKeywords.some(keyword => messageLower == keyword)) {
         votedItem = 'item2';
         toast(`${username} à voté pour ${item1Name}`,
           {
@@ -147,7 +151,7 @@ export function useTmiClient({
       }
 
       if (votedItem) {
-        votedUsers.current.add(username);
+        votedUsers.current.add({username, votedItem});
         onScoreUpdate(currentMatchIndex, votedItem); // currentMatchIndex est utilisé ici
         console.log(`[TMI VOTE DEBUG] Vote de ${username} pour ${votedItem} ENREGISTRÉ. Nouveaux votants:`, Array.from(votedUsers.current));
       } else {
@@ -166,5 +170,5 @@ export function useTmiClient({
     };
   }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, matchIdentifier]); // Ajout de matchIdentifier ici pour que les logs de l'écouteur soient à jour
 
-  return { tmiClient, isTmiConnected, tmiError, setTmiError };
+  return { tmiClient, isTmiConnected, tmiError, setTmiError, votedUsers };
 }

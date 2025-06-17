@@ -1,5 +1,5 @@
 // app/tournament/[id]/live/components/ParticipantCard.tsx
-import React from 'react';
+import React, { RefObject } from 'react';
 import { motion }  from 'framer-motion';
 import { FaYoutube } from 'react-icons/fa';
 import { MatchParticipant } from '@/types';
@@ -13,6 +13,8 @@ interface ParticipantCardProps {
   playerId: string; // 'youtube-player-1' or 'youtube-player-2'
   colorClass: string; // e.g., 'purple' or 'pink' for theming
   buttonGradient: string; // e.g., 'from-blue-500 to-indigo-600'
+  votedUsers: RefObject<Set<{username: string; votedItem: string}>>;
+  number: number;
 }
 
 const ParticipantCard: React.FC<ParticipantCardProps> = ({
@@ -22,11 +24,16 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   onMouseLeavePlayer,
   playerId,
   colorClass, // 'purple' ou 'pink'
-  buttonGradient
+  buttonGradient,
+  votedUsers,
+  number
 }) => {
+
+  console.log(votedUsers);
+
   return (
     <motion.div
-      className={`bg-gray-700/70 p-5 md:p-6 rounded-xl shadow-xl flex flex-col transition-all duration-300 hover:shadow-${colorClass}-500/40`}
+      className={`relative bg-gray-700/70 p-5 md:p-6 rounded-xl shadow-xl flex flex-col transition-all duration-300 hover:shadow-${colorClass}-500/40`}
       whileHover={{ y: -5 }}
       onMouseEnter={onMouseEnterPlayer}
       onMouseLeave={onMouseLeavePlayer}
@@ -63,6 +70,23 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
       >
         Déclarer Gagnant
       </motion.button>
+      <div className={`absolute ${number == 1 ? "right-full -mr-4" : 'left-full -ml-4'} -bottom-2 bg-indigo-500 p-4 rounded-lg shadow-lg`}>
+        <div className="text-white text-sm font-semibold mb-2">Votes:</div>
+        <div className="max-h-32 overflow-y-auto">
+          {votedUsers.current && Array.from(votedUsers.current)
+            .filter(vote => vote.votedItem === `item${number}`)
+            .slice(0,6).map((vote, index) => (
+              <div key={index} className="text-white text-xs mb-1">
+                {vote.username}
+              </div>
+            ))}
+            {(votedUsers.current && Array.from(votedUsers.current).filter(vote => vote.votedItem === `item${number}`).length -6) > 0 && (
+              <div className="text-white text-xs mb-1">
+                And {votedUsers.current && Array.from(votedUsers.current).filter(vote => vote.votedItem === `item${number}`).length -6} more...
+              </div>
+            )}
+        </div>
+      </div>
     </motion.div>
   );
 };

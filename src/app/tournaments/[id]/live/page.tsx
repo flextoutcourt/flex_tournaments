@@ -67,7 +67,7 @@ export default function TournamentLivePage() {
   );
   
   // Hook pour TMI
-  const { isTmiConnected, tmiError, setTmiError } = useTmiClient({
+  const { isTmiConnected, tmiError, setTmiError, votedUsers } = useTmiClient({
     liveTwitchChannel,
     isTournamentActive,
     tournamentWinner,
@@ -181,6 +181,7 @@ export default function TournamentLivePage() {
             onMouseLeavePlayer={handleMouseLeavePlayer}
             player1Ref={player1Ref}
             player2Ref={player2Ref}
+            votedUsers={votedUsers}
           />
         ) : (
           // Ce cas (isTournamentActive = true, mais pas d'activeMatch et pas de winner)

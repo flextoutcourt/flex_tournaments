@@ -1,10 +1,11 @@
 // app/tournament/[id]/live/components/ActiveMatchView.tsx
-import React from 'react';
+import React, { RefObject } from 'react';
 import { motion } from 'framer-motion';
 import { CurrentMatch } from '@/types';
 import { cardVariants } from '@/animationVariants';
 import ParticipantCard from './TournamentItem';
 import { generateKeywords } from '@/utils/tournamentHelper';
+import { useTmiClient } from '@/hooks/useTmiClient';
 
 interface ActiveMatchViewProps {
   activeMatch: CurrentMatch;
@@ -14,6 +15,7 @@ interface ActiveMatchViewProps {
   onMouseLeavePlayer: (playerRef: React.MutableRefObject<YT.Player | null>) => void;
   player1Ref: React.MutableRefObject<YT.Player | null>;
   player2Ref: React.MutableRefObject<YT.Player | null>;
+  votedUsers: RefObject<Set<{username: string; votedItem: string}>>
 }
 
 const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
@@ -24,7 +26,9 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
   onMouseLeavePlayer,
   player1Ref,
   player2Ref,
+  votedUsers
 }) => {
+
   return (
     <motion.div
       key={activeMatch.item1.id + activeMatch.item2.id + activeMatch.roundNumber + activeMatch.matchNumberInRound}
@@ -43,12 +47,14 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
         <ParticipantCard
           participant={activeMatch.item1}
-          onDeclareWinner={() => onDeclareWinner('item1')}
+          onDeclareWinner={() => {onDeclareWinner('item1'); votedUsers.current.clear()}}
           onMouseEnterPlayer={() => onMouseEnterPlayer(player1Ref)}
           onMouseLeavePlayer={() => onMouseLeavePlayer(player1Ref)}
           playerId="youtube-player-1"
           colorClass="purple"
           buttonGradient="from-blue-500 to-indigo-600"
+          votedUsers={votedUsers}
+          number={1}
         />
 
         <div className="flex lg:hidden items-center justify-center my-4">
@@ -57,12 +63,14 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
 
         <ParticipantCard
           participant={activeMatch.item2}
-          onDeclareWinner={() => onDeclareWinner('item2')}
+          onDeclareWinner={() => {onDeclareWinner('item2'); votedUsers.current.clear()}}
           onMouseEnterPlayer={() => onMouseEnterPlayer(player2Ref)}
           onMouseLeavePlayer={() => onMouseLeavePlayer(player2Ref)}
           playerId="youtube-player-2"
           colorClass="pink"
           buttonGradient="from-red-500 to-pink-500"
+          votedUsers={votedUsers}
+          number={2}
         />
       </div>
       <p className="text-center text-sm text-gray-400 mt-10 px-4">
