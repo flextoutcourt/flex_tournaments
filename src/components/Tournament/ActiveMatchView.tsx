@@ -66,8 +66,8 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
         />
       </div>
       <p className="text-center text-sm text-gray-400 mt-10 px-4">
-        Votez : <code className="bg-gray-700 px-1.5 py-0.5 rounded text-purple-300">1</code> ou <code className="bg-gray-700 px-1.5 py-0.5 rounded text-purple-300">{activeMatch.item1.name ? generateKeywords(activeMatch.item1.name)[0] : ''}</code> pour {activeMatch.item1.name},
-        <br className="sm:hidden" /> ou <code className="bg-gray-700 px-1.5 py-0.5 rounded text-pink-300">2</code> ou <code className="bg-gray-700 px-1.5 py-0.5 rounded text-pink-300">{activeMatch.item2.name ? generateKeywords(activeMatch.item2.name)[0] : ''}</code> pour {activeMatch.item2.name}.
+        Votez : <code className="bg-gray-700 px-1.5 py-0.5 rounded text-purple-300">1</code> pour {activeMatch.item1.name},
+        <br className="sm:hidden" /> ou <code className="bg-gray-700 px-1.5 py-0.5 rounded text-pink-300">2</code> pour {activeMatch.item2.name}.
       </p>
     </motion.div>
   );

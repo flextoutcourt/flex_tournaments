@@ -12,47 +12,48 @@ import '@/styles/globals.css';
 const config = {
   colors: [
       {
-          color: '#FF5772',
+          color: '#554226',
           enabled: true,
       },
       {
-          color: '#4CB4BB',
+          color: '#03162D',
           enabled: true,
       },
       {
-          color: '#FFC600',
+          color: '#002027',
           enabled: true,
       },
       {
-          color: '#8B6AE6',
+          color: '#020210',
           enabled: true,
       },
       {
-          color: '#2E0EC7',
+          color: '#02152A',
           enabled: true,
       },
   ],
-  speed: 1.5,
+  speed: 2,
   horizontalPressure: 3,
-  verticalPressure: 4,
-  waveFrequencyX: 2,
+  verticalPressure: 5,
+  waveFrequencyX: 1,
   waveFrequencyY: 3,
-  waveAmplitude: 5,
-  shadows: 1,
-  highlights: 5,
+  waveAmplitude: 8,
+  shadows: 0,
+  highlights: 2,
   colorBrightness: 1,
-  colorSaturation: 7,
+  colorSaturation: 6,
   wireframe: false,
-  colorBlending: 8,
+  colorBlending: 7,
   backgroundColor: '#003FFF',
   backgroundAlpha: 1,
-  grainScale: 3,
-  grainSparsity: 0.02,
-  grainIntensity: 0.3,
+  grainScale: 2,
+  grainSparsity: 0,
+  grainIntensity: 0.175,
   grainSpeed: 1,
   resolution: 1,
   yOffset: 0,
 }
+
 
 
 export default function RootLayout({

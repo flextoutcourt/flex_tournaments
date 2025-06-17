@@ -17,6 +17,7 @@ import TournamentWinnerDisplay from '@/components/Tournament/TournamentWinnerDis
 import ActiveMatchView from '@/components/Tournament/ActiveMatchView';
 import NoMatchScreen from '@/components/Tournament/NoMatchScreen';
 import TournamentHeader from '@/components/Tournament/Navigation/Header';
+import { Toaster } from 'react-hot-toast';
 
 // Styles globaux pour les confettis (ou mettez-les dans un fichier CSS global)
 const GlobalStyles = () => (
@@ -161,6 +162,7 @@ export default function TournamentLivePage() {
   return (
     <div className="min-h-screen text-white flex flex-col items-center p-4 pt-6 md:pt-10 transition-all duration-500 ease-in-out">
       <GlobalStyles />
+      <Toaster position='bottom-left' />
       <TournamentHeader
         title={tournamentTitle}
         liveTwitchChannel={liveTwitchChannel}

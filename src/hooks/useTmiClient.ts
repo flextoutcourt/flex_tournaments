@@ -4,6 +4,7 @@ import tmi from 'tmi.js';
 import { CurrentMatch } from '../types';
 import { VOTE_KEYWORDS_ITEM1, VOTE_KEYWORDS_ITEM2 } from '../constants';
 import { generateKeywords } from '@/utils/tournamentHelper';
+import toast from "react-hot-toast"
 
 interface UseTmiClientProps {
   liveTwitchChannel: string | null;
@@ -97,8 +98,8 @@ export function useTmiClient({
 
     const item1Name = activeMatch.item1.name;
     const item2Name = activeMatch.item2.name;
-    const item1VoteKeywords = [...VOTE_KEYWORDS_ITEM1, ...generateKeywords(item1Name)];
-    const item2VoteKeywords = [...VOTE_KEYWORDS_ITEM2, ...generateKeywords(item2Name)];
+    const item1VoteKeywords = [...VOTE_KEYWORDS_ITEM1];
+    const item2VoteKeywords = [...VOTE_KEYWORDS_ITEM2];
 
     const messageHandler = (channel: string, tags: tmi.ChatUserstate, message: string, self: boolean) => {
       if (self || !activeMatch || !tags.username) return; // Vérifier activeMatch à nouveau ici au cas où il deviendrait null pendant le traitement
@@ -110,17 +111,39 @@ export function useTmiClient({
       console.log(`[TMI VOTE DEBUG] Message de ${username}: "${messageLower}". Match Actif ID (via closure): ${activeMatch.roundNumber}-${activeMatch.matchNumberInRound}-${activeMatch.item1.id}-${activeMatch.item2.id}. CurrentMatchIndex: ${currentMatchIndex}`);
       console.log(`[TMI VOTE DEBUG] Votants actuels pour ${username} (avant check):`, Array.from(votedUsers.current));
 
-      if (votedUsers.current.has(username)) {
-        console.log(`[TMI VOTE DEBUG] ${username} a déjà voté pour ce match (ID: ${matchIdentifier}). Vote ignoré.`);
-        return;
-      }
+      // if (votedUsers.current.has(username)) {
+      //   console.log(`[TMI VOTE DEBUG] ${username} a déjà voté pour ce match (ID: ${matchIdentifier}). Vote ignoré.`);
+      //   return;
+      // }
 
       let votedItem: 'item1' | 'item2' | null = null;
 
       if (item1VoteKeywords.some(keyword => messageLower.includes(keyword))) {
         votedItem = 'item1';
+        toast(`${username} à voté pour ${item1Name}`,
+          {
+            icon: '1️',
+            style: {
+              borderRadius: '10px',
+              background: '#333',
+              color: '#fff',
+            },
+            position: 'bottom-left'
+          }
+        );
       } else if (item2VoteKeywords.some(keyword => messageLower.includes(keyword))) {
         votedItem = 'item2';
+        toast(`${username} à voté pour ${item1Name}`,
+          {
+            icon: '2️⃣',
+            style: {
+              borderRadius: '10px',
+              background: '#333',
+              color: '#fff',
+            },
+            position: 'bottom-right'
+          }
+        );
       }
 
       if (votedItem) {
