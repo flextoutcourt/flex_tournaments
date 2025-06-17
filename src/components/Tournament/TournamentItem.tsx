@@ -4,6 +4,7 @@ import { motion }  from 'framer-motion';
 import { FaYoutube } from 'react-icons/fa';
 import { MatchParticipant } from '@/types';
 import { scoreVariants } from '@/animationVariants';
+import VoteBar from '../Shared/Votebar';
 
 interface ParticipantCardProps {
   participant: MatchParticipant;
@@ -62,6 +63,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
       >
         {participant.score}
       </motion.p>
+      <VoteBar votedUsers={votedUsers} number={number} />
       <motion.button
         onClick={onDeclareWinner}
         className={`w-full mt-auto px-4 py-3 bg-gradient-to-r ${buttonGradient} text-white font-semibold rounded-lg shadow-lg`}
