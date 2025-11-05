@@ -4,6 +4,7 @@ import { AuthService } from "@/services/authService";
 
 export const authConfig: NextAuthConfig = {
   secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
+  trustHost: true,
   providers: [
     Credentials({
       name: "credentials",

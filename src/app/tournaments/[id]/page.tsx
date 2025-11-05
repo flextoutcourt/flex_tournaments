@@ -2,7 +2,8 @@
 import {prisma} from '../../../lib/prisma'; // Ajustez le chemin si nécessaire
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { FaEdit, FaListUl, FaRocket, FaShareSquare, FaExclamationCircle, FaTrophy, FaUsers, FaClock } from 'react-icons/fa';
+import { FaEdit, FaListUl, FaRocket, FaShareSquare, FaExclamationCircle, FaTrophy, FaUsers, FaClock, FaLock } from 'react-icons/fa';
+import { auth } from '@/lib/auth';
 import AddItemForm from '@/components/Forms/Tournament/AddItemForm';
 import TournamentItemsList from '@/components/Tournament/TournamentItemsList';
 import LaunchTournamentSection from '@/components/Tournament/LaunchTournamentSection';
@@ -33,9 +34,11 @@ export default async function TournamentPage({
 }) {
   const {id} = await params;
   const tournament = await getTournament(id);
+  const session = await auth();
 
   // TODO: Add status field to Tournament model
   const currentStatus: 'SETUP' | 'LIVE' | 'FINISHED' = 'SETUP';
+  const isAuthenticated = !!session;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -129,15 +132,43 @@ export default async function TournamentPage({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
           {/* Main Column - Items and Actions */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
-            {/* Add Item Form Section */}
+            {/* Add Item Form Section - Only for authenticated users */}
             {currentStatus === 'SETUP' && (
               <div className="animate-fadeIn" style={{ animationDelay: '0.3s' }}>
-                <AddItemForm
-                  tournamentId={tournament.id}
-                  itemCount={tournament.Items.length}
-                  twoCategoryMode={tournament.mode === 'TWO_CATEGORY'}
-                  categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA ?? '', tournament.categoryB ?? ''].filter(Boolean) : null}
-                />
+                {isAuthenticated ? (
+                  <AddItemForm
+                    tournamentId={tournament.id}
+                    itemCount={tournament.Items.length}
+                    twoCategoryMode={tournament.mode === 'TWO_CATEGORY'}
+                    categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA ?? '', tournament.categoryB ?? ''].filter(Boolean) : null}
+                  />
+                ) : (
+                  <div className="bg-gradient-to-br from-slate-800/50 via-slate-800/50 to-slate-900/50 border-2 border-yellow-500/30 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl">
+                    <div className="flex flex-col items-center text-center space-y-4">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-yellow-500 rounded-full blur-md opacity-30"></div>
+                        <div className="relative bg-gradient-to-br from-yellow-600/20 to-orange-600/20 p-4 rounded-full">
+                          <FaLock className="h-8 w-8 text-yellow-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white mb-2">
+                          Connexion Requise
+                        </h3>
+                        <p className="text-gray-400 mb-4 max-w-md">
+                          Vous devez être connecté pour ajouter des participants au tournoi. Connectez-vous pour contribuer !
+                        </p>
+                        <Link
+                          href={`/auth/signin?callbackUrl=/tournaments/${tournament.id}`}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+                        >
+                          <FaLock className="h-4 w-4" />
+                          Se Connecter
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             

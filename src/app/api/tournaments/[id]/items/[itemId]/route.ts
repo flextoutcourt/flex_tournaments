@@ -1,6 +1,7 @@
 // app/api/tournaments/[id]/items/[itemId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 
 // Petit utilitaire à usage interne, simple et minimal
 function getParams(pathname: string) {
@@ -10,6 +11,15 @@ function getParams(pathname: string) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Check authentication - user must be logged in to delete items
+  const session = await auth();
+  if (!session || !session.user) {
+    return NextResponse.json(
+      { error: "Vous devez être connecté pour supprimer des participants." },
+      { status: 401 }
+    );
+  }
+
   const params = getParams(request.nextUrl.pathname);
   if (!params) {
     return NextResponse.json({ error: 'URL invalide.' }, { status: 400 });

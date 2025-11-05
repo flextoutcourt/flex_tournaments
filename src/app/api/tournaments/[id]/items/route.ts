@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 
 interface ItemCreateRequest {
   name?: string;
@@ -21,6 +22,15 @@ function getYouTubeVideoId(url: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  // Check authentication - user must be logged in to add items
+  const session = await auth();
+  if (!session || !session.user) {
+    return NextResponse.json(
+      { error: "Vous devez être connecté pour ajouter des participants." },
+      { status: 401 }
+    );
+  }
+
   const tournamentId = extractTournamentId(request.nextUrl.pathname);
   const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
