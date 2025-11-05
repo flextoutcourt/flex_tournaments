@@ -11,15 +11,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Modèle pour les utilisateurs
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String    // Hashed password
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tournaments   Tournament[] // Tournois créés par l'utilisateur
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
 // Modèle pour les Tournois
 model Tournament {
   id             String   @id @default(cuid())
   title           String   @unique // Le nom du tournoi devrait être unique pour une meilleure identification
   description    String?  // Description optionnelle du tournoi
   status         Status @default(SETUP)   // Statut du tournoi (ex: "en cours", "terminé", etc.)
+  // Mode du tournoi: STANDARD (classique) ou TWO_CATEGORY (deux catégories opposées)
+  mode           Mode     @default(STANDARD)
+  // Catégories utilisées uniquement si mode == TWO_CATEGORY
+  categoryA      String?
+  categoryB      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  createdById    String?  // ID de l'utilisateur qui a créé le tournoi (optionnel pour les anciens tournois)
+  createdBy      User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   Items          Item[]   // Liste des items participant à ce tournoi
+  
+  @@index([createdById])
 }
 
 enum Status {
@@ -27,10 +53,16 @@ enum Status {
   LIVE
 }
 
+enum Mode {
+  STANDARD
+  TWO_CATEGORY
+}
+
 // Modèle pour les Items (participants du tournoi)
 model Item {
   id             String   @id @default(cuid())
   name           String   // Nom de l'item
+  category       String?  // Catégorie (ex: "FR", "US") pour les tournois à deux catégories
   youtubeUrl     String?  // Lien vers la vidéo YouTube de l'item (optionnel)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

@@ -10,6 +10,8 @@ export function useTournamentData() {
   
   const [tournamentTitle, setTournamentTitle] = useState<string | null>(null);
   const [initialItems, setInitialItems] = useState<Item[]>([]);
+  const [tournamentMode, setTournamentMode] = useState<string | null>(null);
+  const [tournamentCategories, setTournamentCategories] = useState<string[] | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [dataError, setDataError] = useState<string | null>(null);
 
@@ -25,12 +27,14 @@ export function useTournamentData() {
       if (!storedData) {
         throw new Error("Données du tournoi non trouvées. Veuillez relancer depuis la page du tournoi.");
       }
-      const data: TournamentData = JSON.parse(storedData);
+      const data: any = JSON.parse(storedData);
       if (!data.items || data.items.length < 2 || !data.title) {
         throw new Error("Données du tournoi invalides ou participants insuffisants (minimum 2).");
       }
       setTournamentTitle(data.title);
-      setInitialItems(data.items.map(item => ({
+      setTournamentMode(data.mode ?? 'STANDARD');
+      setTournamentCategories(data.categories ?? null);
+      setInitialItems(data.items.map((item: any) => ({
         ...item,
         youtubeVideoId: getYouTubeVideoId(item.youtubeUrl)
       })));
@@ -42,5 +46,5 @@ export function useTournamentData() {
     }
   }, [tournamentId]);
 
-  return { tournamentId, tournamentTitle, initialItems, isLoadingData, dataError, setDataError };
+  return { tournamentId, tournamentTitle, initialItems, isLoadingData, dataError, setDataError, tournamentMode, tournamentCategories };
 }

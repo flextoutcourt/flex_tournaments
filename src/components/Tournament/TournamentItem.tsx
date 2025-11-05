@@ -24,7 +24,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   onMouseEnterPlayer,
   onMouseLeavePlayer,
   playerId,
-  colorClass, // 'purple' ou 'pink'
+  colorClass,
   buttonGradient,
   votedUsers,
   number
@@ -32,63 +32,135 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
   console.log(votedUsers);
 
+  const isPlayer1 = number === 1;
+  const accentColor = isPlayer1 ? 'indigo' : 'pink';
+  const votes = votedUsers.current ? Array.from(votedUsers.current).filter(vote => vote.votedItem === `item${number}`) : [];
+
   return (
     <motion.div
-      className={`relative bg-gray-700/70 p-5 md:p-6 rounded-xl shadow-xl flex flex-col transition-all duration-300 hover:shadow-${colorClass}-500/40`}
-      whileHover={{ y: -5 }}
+      className="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 hover:border-slate-600 rounded-xl shadow-xl flex flex-col h-full overflow-hidden transition-all duration-300"
+      whileHover={{ y: -2 }}
       onMouseEnter={onMouseEnterPlayer}
       onMouseLeave={onMouseLeavePlayer}
     >
-      <h2 className="text-2xl md:text-3xl font-bold text-gray-100 mb-3 truncate text-center" title={participant.name}>{participant.name}</h2>
-      {participant.youtubeVideoId ? (
-        <motion.div
-          className="aspect-video rounded-lg overflow-hidden mb-4 shadow-lg bg-black"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-        >
-          <div id={playerId} className="w-full h-full"></div>
-        </motion.div>
-      ) : participant.youtubeUrl ? (
-        <a href={participant.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-400 hover:underline mb-3 inline-flex items-center justify-center w-full py-2 bg-gray-600 rounded-md hover:bg-gray-500">
-          <FaYoutube className="mr-2" />Lien YouTube
-        </a>
-      ) : (
-        <div className="aspect-video rounded-lg overflow-hidden mb-4 shadow-lg bg-black flex items-center justify-center text-gray-500">
-            Pas de vidéo
+      {/* Compact Header with Name, Category, Player Number & Votes */}
+      <div className={`flex-shrink-0 bg-gradient-to-r from-${accentColor}-900/40 to-transparent border-b border-slate-700 px-3 py-2`}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {/* Player Number Badge */}
+            <div className={`w-8 h-8 bg-${accentColor}-600 rounded-lg flex items-center justify-center shadow-md border border-${accentColor}-400 flex-shrink-0`}>
+              <span className="text-white text-lg font-black">{number}</span>
+            </div>
+            
+            {/* Name & Category */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-black text-white truncate" title={participant.name}>
+                {participant.name}
+              </h2>
+              {participant.category && (
+                <div className={`inline-flex items-center px-2 py-0.5 bg-${accentColor}-600/20 border border-${accentColor}-600/40 rounded text-${accentColor}-300 text-xs font-bold uppercase`}>
+                  {participant.category}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Vote Count Badge */}
+          {votes.length > 0 && (
+            <div className={`bg-${accentColor}-600 px-2 py-1 rounded-lg shadow-md border border-${accentColor}-400 flex items-center gap-1 flex-shrink-0`}>
+              <span className="text-sm">🔥</span>
+              <span className="text-white text-sm font-black">{votes.length}</span>
+            </div>
+          )}
         </div>
-      )}
-      <motion.p
-        key={`score-${participant.id}-${participant.score}`}
-        variants={scoreVariants} initial="initial" animate="animate"
-        className={`text-7xl md:text-8xl font-bold text-${colorClass}-400 my-4 md:my-6 text-center`}
-      >
-        {participant.score}
-      </motion.p>
-      <VoteBar votedUsers={votedUsers} number={number} />
-      <motion.button
-        onClick={onDeclareWinner}
-        className={`w-full mt-auto px-4 py-3 bg-gradient-to-r ${buttonGradient} text-white font-semibold rounded-lg shadow-lg`}
-        whileHover={{ scale: 1.05, boxShadow: `0px 0px 12px rgba(${colorClass === 'purple' ? '96, 165, 250' : '239, 68, 68'}, 0.7)` }}
-        whileTap={{ scale: 0.95 }}
-      >
-        Déclarer Gagnant
-      </motion.button>
-      <div className={`absolute ${number == 1 ? "right-full -mr-4" : 'left-full -ml-4'} -bottom-2 bg-indigo-500 p-4 rounded-lg shadow-lg`}>
-        <div className="text-white text-sm font-semibold mb-2">Votes:</div>
-        <div className="max-h-32 overflow-y-auto">
-          {votedUsers.current && Array.from(votedUsers.current)
-            .filter(vote => vote.votedItem === `item${number}`)
-            .slice(0,6).map((vote, index) => (
-              <div key={index} className="text-white text-xs mb-1">
+      </div>
+
+      {/* Main Content Area - Flexible */}
+      <div className="flex-1 p-3 flex flex-col gap-2 min-h-0">
+        {/* Video Player - Compact */}
+        {participant.youtubeVideoId ? (
+          <motion.div
+            className="w-full aspect-video rounded-lg overflow-hidden shadow-lg bg-black border border-slate-700 flex-shrink-0"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            transition={{ delay: 0.2 }}
+          >
+            <div id={playerId} className="w-full h-full"></div>
+          </motion.div>
+        ) : participant.youtubeUrl ? (
+          <a 
+            href={participant.youtubeUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className={`aspect-video rounded-lg flex items-center justify-center bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-${accentColor}-500 transition-all shadow-lg group flex-shrink-0`}
+          >
+            <div className="text-center">
+              <FaYoutube className={`text-3xl text-${accentColor}-400 mb-1 mx-auto group-hover:scale-110 transition-transform`} />
+              <span className="text-white text-xs font-semibold">YouTube</span>
+            </div>
+          </a>
+        ) : (
+          <div className="aspect-video rounded-lg flex items-center justify-center bg-slate-700/50 border border-slate-600/50 shadow-lg flex-shrink-0">
+            <span className="text-gray-500 text-sm font-medium">Pas de vidéo</span>
+          </div>
+        )}
+
+        {/* Score Display - Compact */}
+        <motion.div
+          key={`score-${participant.id}-${participant.score}`}
+          variants={scoreVariants} 
+          initial="initial" 
+          animate="animate"
+          className={`flex-shrink-0 text-center bg-gradient-to-br from-slate-700 to-slate-800 border border-${accentColor}-600/30 rounded-lg py-2 shadow-lg`}
+        >
+          <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Score</div>
+          <div className={`text-4xl font-black text-${accentColor}-400`}>
+            {participant.score}
+          </div>
+        </motion.div>
+
+        {/* Vote Progress Bar - Compact */}
+        <div className="flex-shrink-0">
+          <VoteBar votedUsers={votedUsers} number={number} />
+        </div>
+
+        {/* Winner Button - Compact */}
+        <motion.button
+          onClick={onDeclareWinner}
+          className={`w-full flex-shrink-0 px-3 py-2.5 bg-gradient-to-r ${buttonGradient} text-white text-sm font-black rounded-lg shadow-lg border border-white/10 hover:border-white/30 transition-all`}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <span className="flex items-center justify-center gap-2">
+            <span>👑</span>
+            <span>Déclarer Vainqueur</span>
+          </span>
+        </motion.button>
+      </div>
+
+      {/* Recent Voters - Compact Footer */}
+      {votes.length > 0 && (
+        <div className={`flex-shrink-0 bg-gradient-to-t from-${accentColor}-900/20 to-transparent border-t border-slate-700/50 px-3 py-2`}>
+          <div className="flex items-center gap-1 mb-1">
+            <span className="text-white/70 text-xs font-semibold uppercase">Derniers votes</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {votes.slice(0, 5).map((vote, index) => (
+              <div 
+                key={index} 
+                className={`bg-${accentColor}-600/30 border border-${accentColor}-600/50 px-1.5 py-0.5 rounded text-white text-xs font-medium`}
+              >
                 {vote.username}
               </div>
             ))}
-            {(votedUsers.current && Array.from(votedUsers.current).filter(vote => vote.votedItem === `item${number}`).length -6) > 0 && (
-              <div className="text-white text-xs mb-1">
-                And {votedUsers.current && Array.from(votedUsers.current).filter(vote => vote.votedItem === `item${number}`).length -6} more...
+            {votes.length > 5 && (
+              <div className="bg-slate-700 border border-slate-600 px-1.5 py-0.5 rounded text-white/70 text-xs font-medium">
+                +{votes.length - 5}
               </div>
             )}
+          </div>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 };

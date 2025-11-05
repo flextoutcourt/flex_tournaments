@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 interface ItemCreateRequest {
   name?: string;
   youtubeUrl?: string | null;
+  category?: string | null;
 }
 
 // Utilitaire pour extraire l'ID du tournoi depuis le path
@@ -73,6 +74,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Tournoi non trouvé." }, { status: 404 });
     }
 
+    // Si le tournoi est en mode TWO_CATEGORY, valider la catégorie fournie
+    if ((tournament as any).mode === 'TWO_CATEGORY') {
+      const providedCat = body.category ? body.category.trim() : null;
+      if (!providedCat) {
+        return NextResponse.json({ error: "La catégorie est requise pour ce tournoi." }, { status: 400 });
+      }
+      const allowedA = (tournament as any).categoryA?.trim().toLowerCase();
+      const allowedB = (tournament as any).categoryB?.trim().toLowerCase();
+      if (providedCat.toLowerCase() !== allowedA && providedCat.toLowerCase() !== allowedB) {
+        return NextResponse.json({ error: `Catégorie invalide. Utilisez '${(tournament as any).categoryA}' ou '${(tournament as any).categoryB}'.` }, { status: 400 });
+      }
+    }
+
     const existingItem = await prisma.item.findFirst({
       where: {
         tournamentId,
@@ -88,6 +102,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: itemName,
         youtubeUrl: youtubeUrl || null,
+        category: body.category ? body.category.trim() : null,
         tournamentId,
       },
     });

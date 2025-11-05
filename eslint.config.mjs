@@ -10,6 +10,7 @@ const __dirname = path.dirname(__filename);
 
 const compat = new FlatCompat({
   baseDirectory: __dirname, // ou import.meta.dirname si Node.js v20.11.0+
+  recommendedConfig: {}, // Configuration requise pour FlatCompat
   // resolvePluginsRelativeTo: __dirname, // Peut être nécessaire pour certains plugins plus anciens
 });
 

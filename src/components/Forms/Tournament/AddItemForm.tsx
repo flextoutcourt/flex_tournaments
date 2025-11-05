@@ -21,6 +21,7 @@ interface YouTubeSearchResult {
 interface IAddItemFormInputs {
   name: string; // Le nom est maintenant requis
   youtubeUrl: string; // Sera rempli par la recherche
+  category?: string; // Optionnel: utilisé si le tournoi a deux catégories
   // Le champ de recherche lui-même n'est pas dans les inputs du formulaire soumis,
   // mais nous aurons un état pour lui.
 }
@@ -39,9 +40,11 @@ const schema = yup.object().shape({
 interface AddItemFormProps {
   tournamentId: string;
   itemCount: number;
+  twoCategoryMode?: boolean;
+  categories?: string[] | null;
 }
 
-export default function AddItemForm({ tournamentId, itemCount }: AddItemFormProps) {
+export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode = false, categories = null }: AddItemFormProps) {
   const [isSubmittingToServer, setIsSubmittingToServer] = useState(false); // Renommé pour clarté
   const [serverError, setServerError] = useState<string | null>(null);
   const router = useRouter();
@@ -65,6 +68,7 @@ export default function AddItemForm({ tournamentId, itemCount }: AddItemFormProp
     defaultValues: {
       name: '',
       youtubeUrl: '',
+      category: undefined,
     },
   });
 
@@ -124,6 +128,7 @@ export default function AddItemForm({ tournamentId, itemCount }: AddItemFormProp
         body: JSON.stringify({
           name: data.name, // Assurez-vous que votre API attend 'name'
           youtubeUrl: data.youtubeUrl,
+          category: (data as any).category ?? null,
         }),
       });
 
@@ -153,126 +158,193 @@ export default function AddItemForm({ tournamentId, itemCount }: AddItemFormProp
   }, [currentYoutubeUrl, searchError]);
 
   return (
-    <div className="p-6 bg-gray-800 rounded-lg shadow-md mt-8">
-      <h3 className="text-xl font-semibold text-purple-400 mb-4">
-        <FaPlus className="inline-block mr-2 mb-0.5" />
-        Ajouter un Participant au Tournoi
-      </h3>
-      <p className="text-sm text-gray-400 mb-4">Participants actuels : {itemCount}</p>
-
-      {serverError && (
-        <div className="mb-4 p-3 bg-red-500/20 text-red-300 border border-red-500 rounded-md flex items-center">
-          <FaExclamationTriangle className="h-5 w-5 mr-2 text-red-400" />
-          <p className="text-sm">{serverError}</p>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Section de recherche YouTube */}
-        <div className="space-y-2">
-          <label htmlFor="youtubeSearchQuery" className="block text-sm font-medium text-gray-300">
-            <FaYoutube className="inline-block mr-1.5 mb-0.5" /> Rechercher sur YouTube
-          </label>
-          <div className="flex space-x-2">
-            <input
-              id="youtubeSearchQuery"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleYouTubeSearch();}}}
-              placeholder="Titre de vidéo, nom de chaîne..."
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-500"
-            />
-            <button
-              type="button" // Important pour ne pas soumettre le formulaire principal
-              onClick={handleYouTubeSearch}
-              disabled={isSearching || !searchQuery.trim()}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isSearching ? (
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <FaSearch />
-              )}
-            </button>
+    <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-indigo-500/30 hover:border-indigo-500/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group">
+      {/* Background effects */}
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl group-hover:bg-indigo-600/20 transition-all duration-700"></div>
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-600/10 rounded-full blur-2xl group-hover:bg-purple-600/20 transition-all duration-700"></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-indigo-500 rounded-lg blur-md opacity-50"></div>
+              <div className="relative bg-gradient-to-br from-indigo-600 to-purple-600 p-3 rounded-lg">
+                <FaPlus className="text-white" />
+              </div>
+            </div>
+            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              Ajouter un Participant
+            </span>
+          </h3>
+          <div className="bg-indigo-500/20 px-4 py-2 rounded-lg border border-indigo-500/30 backdrop-blur-sm">
+            <p className="text-sm text-indigo-300 font-semibold">{itemCount} participant{itemCount > 1 ? 's' : ''}</p>
           </div>
-          {searchError && <p className="mt-1 text-xs text-red-400">{searchError}</p>}
         </div>
 
-        {/* Affichage des résultats de recherche */}
-        {searchResults.length > 0 && (
-          <ul className="border border-gray-700 rounded-md p-2 space-y-2 max-h-60 overflow-y-auto bg-gray-700/50">
-            {searchResults.map((result) => (
-              <li
-                key={result.id + result.kind} // Utiliser kind pour une clé plus unique si ID peut être partagé
-                className="flex items-center p-2.5 bg-gray-600 hover:bg-gray-500 rounded-md cursor-pointer transition-colors"
-                onClick={() => handleSelectSearchResult(result)}
-              >
-                <img src={result.thumbnail} alt={result.title} width="80" className="mr-3 rounded aspect-video object-cover" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate" title={result.title}>{result.title}</p>
-                  {result.channelTitle && <p className="text-xs text-gray-300 truncate">Chaîne : {result.channelTitle}</p>}
-                  <p className="text-xs text-indigo-300 capitalize">{result.kind}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+        {serverError && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 border-2 border-red-500/50 rounded-xl flex items-start gap-3 backdrop-blur-sm animate-fadeIn">
+            <div className="relative flex-shrink-0">
+              <div className="absolute inset-0 bg-red-500 rounded-full blur-md opacity-50"></div>
+              <div className="relative bg-red-500/20 p-2 rounded-full">
+                <FaExclamationTriangle className="h-5 w-5 text-red-400" />
+              </div>
+            </div>
+            <p className="text-sm leading-relaxed">{serverError}</p>
+          </div>
         )}
 
-        {/* Champ Nom du Participant (maintenant requis) */}
-        <div>
-          <label htmlFor="itemName" className="block text-sm font-medium text-gray-300 mb-1">
-            <FaFont className="inline-block mr-1.5 mb-0.5" /> Nom du Participant
-          </label>
-          <input
-            id="itemName"
-            type="text"
-            {...register('name')}
-            className={`w-full px-3 py-2 bg-gray-700 border ${errors.name ? 'border-red-500' : 'border-gray-600'} rounded-md shadow-sm text-gray-100 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-500`}
-            placeholder="Sera pré-rempli ou entrez manuellement"
-          />
-          {errors.name && <p className="mt-1 text-xs text-red-400">{errors.name.message}</p>}
-        </div>
-
-        {/* Champ Lien YouTube (maintenant en lecture seule et rempli par la recherche) */}
-        <div>
-          <label htmlFor="youtubeUrl" className="block text-sm font-medium text-gray-300 mb-1">
-            <FaYoutube className="inline-block mr-1.5 mb-0.5" /> Lien YouTube (sélectionné)
-          </label>
-          <input
-            id="youtubeUrl"
-            type="text" // Garder type text pour afficher l'URL
-            {...register('youtubeUrl')}
-            readOnly
-            className={`w-full px-3 py-2 bg-gray-600 border ${errors.youtubeUrl ? 'border-red-500' : 'border-gray-500'} rounded-md shadow-sm text-gray-300 placeholder-gray-500 cursor-not-allowed`}
-            placeholder="Sélectionnez un résultat de recherche ci-dessus"
-          />
-          {errors.youtubeUrl && <p className="mt-1 text-xs text-red-400">{errors.youtubeUrl.message}</p>}
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            disabled={isFormStateSubmitting || isSubmittingToServer || !isValid || !watch('youtubeUrl') /* S'assurer qu'une URL a été sélectionnée */}
-            className="w-full flex items-center justify-center px-4 py-2.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmittingToServer || isFormStateSubmitting ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Ajout en cours...
-              </>
-            ) : (
-              'Ajouter le Participant'
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Section de recherche YouTube */}
+          <div className="space-y-3">
+            <label htmlFor="youtubeSearchQuery" className="text-sm font-bold text-gray-200 flex items-center gap-2">
+              <FaYoutube className="text-red-500" /> Rechercher sur YouTube
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="youtubeSearchQuery"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleYouTubeSearch();}}}
+                placeholder="Titre de vidéo, nom de chaîne..."
+                className="flex-1 px-4 py-3 bg-slate-700/50 border-2 border-slate-600/50 rounded-xl shadow-sm text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400 transition-all backdrop-blur-sm"
+              />
+              <button
+                type="button"
+                onClick={handleYouTubeSearch}
+                disabled={isSearching || !searchQuery.trim()}
+                className="group/btn relative inline-flex items-center justify-center px-6 py-3 text-sm font-bold text-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                <div className="relative z-10">
+                  {isSearching ? (
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <FaSearch />
+                  )}
+                </div>
+              </button>
+            </div>
+            {searchError && (
+              <p className="mt-2 text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/30">{searchError}</p>
             )}
-          </button>
-        </div>
-      </form>
+          </div>
+
+          {/* Affichage des résultats de recherche */}
+          {searchResults.length > 0 && (
+            <ul className="border-2 border-purple-500/30 rounded-xl p-3 space-y-2 max-h-72 overflow-y-auto bg-slate-700/30 backdrop-blur-sm custom-scrollbar">
+              {searchResults.map((result) => (
+                <li
+                  key={result.id + result.kind}
+                  className="group/result flex items-center p-3 bg-gradient-to-r from-slate-700/50 to-slate-600/50 hover:from-purple-600/30 hover:to-indigo-600/30 rounded-lg cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-purple-500/50 hover:scale-[1.02]"
+                  onClick={() => handleSelectSearchResult(result)}
+                >
+                  <div className="relative flex-shrink-0 mr-4">
+                    <div className="absolute inset-0 bg-purple-500/20 rounded-lg blur-md opacity-0 group-hover/result:opacity-100 transition-opacity duration-300"></div>
+                    <img src={result.thumbnail} alt={result.title} width="100" className="relative rounded-lg aspect-video object-cover shadow-lg" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate mb-1 group-hover/result:text-purple-300 transition-colors" title={result.title}>{result.title}</p>
+                    {result.channelTitle && <p className="text-xs text-gray-300 truncate mb-1">📺 {result.channelTitle}</p>}
+                    <span className="inline-block px-2 py-1 text-xs font-semibold rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 capitalize">
+                      {result.kind}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Champ Nom du Participant */}
+          <div className="space-y-2">
+            <label htmlFor="itemName" className="text-sm font-bold text-gray-200 flex items-center gap-2">
+              <FaFont className="text-purple-400" /> Nom du Participant
+            </label>
+            <input
+              id="itemName"
+              type="text"
+              {...register('name')}
+              className={`w-full px-4 py-3 bg-slate-700/50 border-2 ${errors.name ? 'border-red-500/50' : 'border-slate-600/50'} rounded-xl shadow-sm text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 placeholder-gray-400 transition-all backdrop-blur-sm`}
+              placeholder="Sera pré-rempli ou entrez manuellement"
+            />
+            {errors.name && (
+              <p className="text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/30">{errors.name.message}</p>
+            )}
+          </div>
+
+          {/* Si le tournoi est en mode deux-catégories */}
+          {twoCategoryMode && (
+            <div className="space-y-2">
+              <label htmlFor="itemCategory" className="text-sm font-bold text-gray-200">Catégorie</label>
+              <select
+                id="itemCategory"
+                {...register('category')}
+                className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl shadow-sm text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all backdrop-blur-sm ${errors?.category ? 'border-red-500/50' : 'border-slate-600/50'}`}
+                defaultValue={''}
+              >
+                <option value="" disabled>Choisir une catégorie</option>
+                {(categories || []).map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              {twoCategoryMode && !watch('category') && (
+                <p className="text-xs text-yellow-400 bg-yellow-500/10 px-3 py-2 rounded-lg border border-yellow-500/30">Veuillez sélectionner une catégorie.</p>
+              )}
+            </div>
+          )}
+
+          {/* Champ Lien YouTube */}
+          <div className="space-y-2">
+            <label htmlFor="youtubeUrl" className="text-sm font-bold text-gray-200 flex items-center gap-2">
+              <FaYoutube className="text-red-500" /> Lien YouTube (sélectionné)
+            </label>
+            <input
+              id="youtubeUrl"
+              type="text"
+              {...register('youtubeUrl')}
+              readOnly
+              className={`w-full px-4 py-3 bg-slate-600/30 border-2 ${errors.youtubeUrl ? 'border-red-500/50' : 'border-slate-500/50'} rounded-xl shadow-sm text-gray-300 placeholder-gray-500 cursor-not-allowed backdrop-blur-sm`}
+              placeholder="Sélectionnez un résultat de recherche ci-dessus"
+            />
+            {errors.youtubeUrl && (
+              <p className="text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg border border-red-500/30">{errors.youtubeUrl.message}</p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div>
+            <button
+              type="submit"
+              disabled={isFormStateSubmitting || isSubmittingToServer || !isValid || !watch('youtubeUrl')}
+              className="group/btn relative w-full inline-flex items-center justify-center px-6 py-4 text-base font-bold text-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+              <span className="relative z-10 flex items-center gap-2">
+                {isSubmittingToServer || isFormStateSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Ajout en cours...
+                  </>
+                ) : (
+                  <>
+                    <FaPlus />
+                    Ajouter le Participant
+                  </>
+                )}
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ export interface Item {
   id: string;
   name: string;
   youtubeUrl?: string | null;
+  category?: string | null;
   youtubeVideoId?: string | null; // Ajouté pour la cohérence après getYouTubeVideoId
 }
 
