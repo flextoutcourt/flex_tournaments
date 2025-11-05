@@ -266,6 +266,29 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
     });
   }, []);
 
+  // Moderator function to add or remove votes
+  const modifyScore = useCallback((matchIndex: number, itemKey: 'item1' | 'item2', amount: number) => {
+    setMatches(prevMatches => {
+      if (matchIndex >= prevMatches.length || !prevMatches[matchIndex]) {
+        return prevMatches;
+      }
+      return prevMatches.map((match, index) => {
+        if (index === matchIndex) {
+          const updatedMatch = { ...match };
+          if (itemKey === 'item1') {
+            const newScore = Math.max(0, match.item1.score + amount); // Don't go below 0
+            updatedMatch.item1 = { ...match.item1, score: newScore };
+          } else {
+            const newScore = Math.max(0, match.item2.score + amount); // Don't go below 0
+            updatedMatch.item2 = { ...match.item2, score: newScore };
+          }
+          return updatedMatch;
+        }
+        return match;
+      });
+    });
+  }, []);
+
   return {
     matches,
     currentMatchIndex,
@@ -284,6 +307,7 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
     handleDeclareWinnerAndNext,
     handleStopTournament,
     updateScore,
+    modifyScore, // Moderator function to add/remove votes
     setMatches // Pourrait être utile pour des cas spécifiques de reset/manipulation externe
   };
 }

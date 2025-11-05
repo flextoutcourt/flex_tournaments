@@ -60,7 +60,7 @@ export default function TournamentLivePage() {
   const {
     matches, currentMatchIndex, tournamentWinner, secondPlace, thirdPlace, setTournamentWinner, currentRoundNumber,
     isTournamentActive, setIsTournamentActive, selectedItemCountOption, setSelectedItemCountOption,
-    activeMatch, startTournament, handleDeclareWinnerAndNext, handleStopTournament, updateScore,
+    activeMatch, startTournament, handleDeclareWinnerAndNext, handleStopTournament, updateScore, modifyScore,
   } = useTournamentLogic({ 
     initialItems, 
     onTournamentError: setPageError, 
@@ -84,6 +84,7 @@ export default function TournamentLivePage() {
     activeMatch,
     currentMatchIndex,
     onScoreUpdate: updateScore,
+    onModifyScore: modifyScore,
   });
 
   // Combiner les erreurs pour l'affichage

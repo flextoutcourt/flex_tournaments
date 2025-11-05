@@ -13,6 +13,7 @@ interface UseTmiClientProps {
   activeMatch: CurrentMatch | null;
   currentMatchIndex: number;
   onScoreUpdate: (matchIndex: number, itemKey: 'item1' | 'item2') => void;
+  onModifyScore: (matchIndex: number, itemKey: 'item1' | 'item2', amount: number) => void;
 }
 
 export function useTmiClient({
@@ -21,7 +22,8 @@ export function useTmiClient({
   tournamentWinner,
   activeMatch,
   currentMatchIndex,
-  onScoreUpdate
+  onScoreUpdate,
+  onModifyScore
 }: UseTmiClientProps) {
   const [tmiClient, setTmiClient] = useState<tmi.Client | null>(null);
   const [isTmiConnected, setIsTmiConnected] = useState(false);
@@ -111,6 +113,78 @@ export function useTmiClient({
       console.log(`[TMI VOTE DEBUG] Message de ${username}: "${messageLower}". Match Actif ID (via closure): ${activeMatch.roundNumber}-${activeMatch.matchNumberInRound}-${activeMatch.item1.id}-${activeMatch.item2.id}. CurrentMatchIndex: ${currentMatchIndex}`);
       console.log(`[TMI VOTE DEBUG] Votants actuels pour ${username} (avant check):`, Array.from(votedUsers.current));
 
+      // Moderator commands - only for luniqueflex
+      if (username === 'luniqueflex') {
+        const addVoteMatch = messageLower.match(/^\.\.add vote ([12]) (\d+)$/);
+        const removeVoteMatch = messageLower.match(/^\.\.remove vote ([12]) (\d+)$/);
+        const setVoteMatch = messageLower.match(/^\.\.set vote ([12]) (\d+)$/);
+
+        if (addVoteMatch) {
+          const voteNumber = addVoteMatch[1];
+          const amount = parseInt(addVoteMatch[2], 10);
+          const votedItem = voteNumber === '1' ? 'item1' : 'item2';
+          const itemName = votedItem === 'item1' ? item1Name : item2Name;
+          
+          onModifyScore(currentMatchIndex, votedItem, amount);
+          console.log(`[TMI MOD COMMAND] ${username} forced add ${amount} vote(s) for ${votedItem} (${itemName})`);
+          
+          toast(`🔧 Mod: +${amount} vote${amount > 1 ? 's' : ''} pour ${itemName}`, {
+            icon: voteNumber === '1' ? '1️⃣' : '2️⃣',
+            style: {
+              borderRadius: '10px',
+              background: '#6366f1',
+              color: '#fff',
+            },
+            position: 'top-center'
+          });
+          return;
+        }
+
+        if (removeVoteMatch) {
+          const voteNumber = removeVoteMatch[1];
+          const amount = parseInt(removeVoteMatch[2], 10);
+          const votedItem = voteNumber === '1' ? 'item1' : 'item2';
+          const itemName = votedItem === 'item1' ? item1Name : item2Name;
+          
+          onModifyScore(currentMatchIndex, votedItem, -amount);
+          console.log(`[TMI MOD COMMAND] ${username} forced remove ${amount} vote(s) from ${votedItem} (${itemName})`);
+          
+          toast(`🔧 Mod: -${amount} vote${amount > 1 ? 's' : ''} pour ${itemName}`, {
+            icon: '❌',
+            style: {
+              borderRadius: '10px',
+              background: '#ef4444',
+              color: '#fff',
+            },
+            position: 'top-center'
+          });
+          return;
+        }
+
+        if (setVoteMatch) {
+          const voteNumber = setVoteMatch[1];
+          const targetScore = parseInt(setVoteMatch[2], 10);
+          const votedItem = voteNumber === '1' ? 'item1' : 'item2';
+          const itemName = votedItem === 'item1' ? item1Name : item2Name;
+          const currentScore = votedItem === 'item1' ? activeMatch.item1.score : activeMatch.item2.score;
+          const difference = targetScore - currentScore;
+          
+          onModifyScore(currentMatchIndex, votedItem, difference);
+          console.log(`[TMI MOD COMMAND] ${username} set score to ${targetScore} for ${votedItem} (${itemName}) [was ${currentScore}]`);
+          
+          toast(`🔧 Mod: Score défini à ${targetScore} pour ${itemName}`, {
+            icon: '⚙️',
+            style: {
+              borderRadius: '10px',
+              background: '#8b5cf6',
+              color: '#fff',
+            },
+            position: 'top-center'
+          });
+          return;
+        }
+      }
+
       // Check if user has already voted
       const hasVoted = Array.from(votedUsers.current).some(vote => vote.username === username);
       if (hasVoted) {
@@ -168,7 +242,7 @@ export function useTmiClient({
         console.log(`TMI.js: Écouteur de messages désactivé (Match ID était: ${matchIdentifier}).`);
       }
     };
-  }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, matchIdentifier]); // Ajout de matchIdentifier ici pour que les logs de l'écouteur soient à jour
+  }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, onModifyScore, matchIdentifier]); // Ajout de matchIdentifier et onModifyScore
 
   return { tmiClient, isTmiConnected, tmiError, setTmiError, votedUsers };
 }
