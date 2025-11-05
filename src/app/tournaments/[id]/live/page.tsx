@@ -1,10 +1,11 @@
 // app/tournament/[id]/live/page.tsx
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { FaStopCircle } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { useTournamentLogic } from '@/hooks/useTournamentLogic';
 import { useYouTubeApi, useYouTubePlayers } from '@/hooks/useYoutubeApi';
@@ -139,7 +140,6 @@ export default function TournamentLivePage() {
     setLiveTwitchChannel(channel);
     setShowChannelModal(false);
     
-    const { toast } = require('react-hot-toast');
     toast.success('Tournoi restauré ! Vous pouvez reprendre là où vous vous êtes arrêté.', {
       duration: 4000,
       position: 'top-center',
@@ -150,7 +150,6 @@ export default function TournamentLivePage() {
   const handleChannelCancel = useCallback(() => {
     setShowChannelModal(false);
     
-    const { toast } = require('react-hot-toast');
     toast('Vous pouvez continuer sans connexion Twitch, mais les votes ne seront pas comptabilisés.', {
       duration: 5000,
       position: 'top-center',

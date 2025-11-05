@@ -1,8 +1,8 @@
 // app/tournament/create/page.tsx
 'use client'; // Ce composant doit être un Client Component pour utiliser les hooks
 
-import React, { useState, useEffect } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useRouter } from 'next/navigation'; // Pour la redirection après création
@@ -42,49 +42,7 @@ export default function CreateTournamentPage() {
   const [serverError, setServerError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Show loading while checking authentication
-  if (status === 'loading') {
-    return (
-      <div className="max-w-lg mx-auto p-4 md:p-8 bg-gray-800 rounded-xl shadow-2xl">
-        <div className="flex items-center justify-center p-8">
-          <svg className="animate-spin h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated or not admin
-  if (!session || session.user?.role !== 'ADMIN') {
-    return (
-      <div className="max-w-lg mx-auto p-4 md:p-8 bg-gray-800 rounded-xl shadow-2xl">
-        <div className="text-center">
-          <FaLock className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-red-400 mb-4">Accès Refusé</h1>
-          <p className="text-gray-300 mb-6">
-            Vous devez être connecté en tant qu'administrateur pour créer un tournoi.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth/signin"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-lg shadow-lg text-base font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors"
-            >
-              Se connecter
-            </Link>
-            <Link
-              href="/tournaments"
-              className="inline-flex items-center justify-center px-6 py-3 border border-gray-600 rounded-lg shadow-lg text-base font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors"
-            >
-              Voir les tournois
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Initialize useForm hook before any conditional returns
   const { register, handleSubmit, formState: { errors, isValid, isSubmitting }, reset } = useForm<any>({
     resolver: yupResolver(schema),
     mode: 'onChange',
@@ -132,6 +90,49 @@ export default function CreateTournamentPage() {
       setIsLoading(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="max-w-lg mx-auto p-4 md:p-8 bg-gray-800 rounded-xl shadow-2xl">
+        <div className="flex items-center justify-center p-8">
+          <svg className="animate-spin h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated or not admin
+  if (!session || session.user?.role !== 'ADMIN') {
+    return (
+      <div className="max-w-lg mx-auto p-4 md:p-8 bg-gray-800 rounded-xl shadow-2xl">
+        <div className="text-center">
+          <FaLock className="h-16 w-16 text-red-400 mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-red-400 mb-4">Accès Refusé</h1>
+          <p className="text-gray-300 mb-6">
+            Vous devez être connecté en tant qu'administrateur pour créer un tournoi.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/auth/signin"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-lg shadow-lg text-base font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors"
+            >
+              Se connecter
+            </Link>
+            <Link
+              href="/tournaments"
+              className="inline-flex items-center justify-center px-6 py-3 border border-gray-600 rounded-lg shadow-lg text-base font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 transition-colors"
+            >
+              Voir les tournois
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-lg mx-auto p-4 md:p-8 bg-gray-800 rounded-xl shadow-2xl">

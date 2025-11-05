@@ -3,7 +3,6 @@
 
 import Link from 'next/link';
 import { FaListAlt, FaPlus, FaEye } from 'react-icons/fa';
-import { Metadata } from 'next';
 import useSWR from 'swr';
 import { fetcher } from '@/utils/fetcher';
 

@@ -3,7 +3,6 @@ import {prisma} from '../../../lib/prisma'; // Ajustez le chemin si nécessaire
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FaEdit, FaListUl, FaRocket, FaShareSquare, FaExclamationCircle, FaTrophy, FaUsers, FaClock } from 'react-icons/fa';
-import { Metadata, ResolvingMetadata } from 'next';
 import AddItemForm from '@/components/Forms/Tournament/AddItemForm';
 import TournamentItemsList from '@/components/Tournament/TournamentItemsList';
 import LaunchTournamentSection from '@/components/Tournament/LaunchTournamentSection';
@@ -35,8 +34,8 @@ export default async function TournamentPage({
   const {id} = await params;
   const tournament = await getTournament(id);
 
-  // @ts-ignore // TODO: Remove ts-ignore once 'status' is added to the Tournament model in Prisma
-  const currentStatus = tournament.status || 'SETUP'; // Supposons un champ 'status' dans votre modèle Tournament
+  // TODO: Add status field to Tournament model
+  const currentStatus: 'SETUP' | 'LIVE' | 'FINISHED' = 'SETUP';
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -221,8 +220,8 @@ export default async function TournamentPage({
               />
             )}
             
-            {/* Live Tournament Status */}
-            {(currentStatus === 'LIVE') && (
+            {/* Live Tournament Status - Commented out until status field is added to model */}
+            {false && (
               <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-green-500/30 rounded-2xl p-6 backdrop-blur-sm shadow-xl relative overflow-hidden">
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-600/10 rounded-full blur-2xl animate-pulse"></div>
                 

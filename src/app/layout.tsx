@@ -1,7 +1,6 @@
 "use client";
 
 // app/layout.tsx
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Providers } from '@/components/Providers';
 import UserMenu from '@/components/UserMenu';
