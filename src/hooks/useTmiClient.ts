@@ -14,6 +14,7 @@ interface UseTmiClientProps {
   currentMatchIndex: number;
   onScoreUpdate: (matchIndex: number, itemKey: 'item1' | 'item2') => void;
   onModifyScore: (matchIndex: number, itemKey: 'item1' | 'item2', amount: number) => void;
+  onVoteReceived?: (itemKey: 'item1' | 'item2') => void;
 }
 
 export function useTmiClient({
@@ -23,13 +24,16 @@ export function useTmiClient({
   activeMatch,
   currentMatchIndex,
   onScoreUpdate,
-  onModifyScore
+  onModifyScore,
+  onVoteReceived
 }: UseTmiClientProps) {
   const [tmiClient, setTmiClient] = useState<tmi.Client | null>(null);
   const [isTmiConnected, setIsTmiConnected] = useState(false);
   const [tmiError, setTmiError] = useState<string | null>(null);
   
   const votedUsers = useRef(new Set<{username: string;votedItem: string}>());
+  const superVoteUsers = useRef(new Set<string>()); // Track users who have used their super vote for the entire tournament
+  const superVotesThisMatch = useRef(new Set<string>()); // Track which users used super vote in current match only
 
   // Créer un identifiant stable pour le match actuel
   // Cet identifiant ne changera que si les participants ou le round/match changent réellement.
@@ -37,12 +41,22 @@ export function useTmiClient({
     ? `${activeMatch.roundNumber}-${activeMatch.matchNumberInRound}-${activeMatch.item1.id}-${activeMatch.item2.id}` 
     : null;
 
+  // Reset super vote users when tournament starts/restarts
+  useEffect(() => {
+    if (isTournamentActive && !tournamentWinner) {
+      // Tournament is active, clear super votes for fresh start
+      superVoteUsers.current.clear();
+      console.log(`[TMI SUPER VOTE DEBUG] Tournament started/restarted. Super votes cleared.`);
+    }
+  }, [isTournamentActive, tournamentWinner]);
+
   useEffect(() => {
     // Ce useEffect se déclenchera maintenant uniquement lorsque 'matchIdentifier' change,
     // ce qui signifie qu'un nouveau match (différents participants ou round/numéro de match) commence.
     if (matchIdentifier) { // S'assurer qu'il y a un match actif
       console.log(`[TMI VOTE DEBUG] Changement d'identifiant de match: ${matchIdentifier}. Réinitialisation des votants. Votants avant clear:`, Array.from(votedUsers.current));
       votedUsers.current.clear();
+      superVotesThisMatch.current.clear(); // Clear super votes for this match
       console.log(`[TMI VOTE DEBUG] Votants après clear:`, Array.from(votedUsers.current));
     }
     // Si activeMatch devient null (fin du tournoi), matchIdentifier devient null,
@@ -211,7 +225,7 @@ export function useTmiClient({
         );
       } else if (item2VoteKeywords.some(keyword => messageLower == keyword)) {
         votedItem = 'item2';
-        toast(`${username} à voté pour ${item1Name}`,
+        toast(`${username} à voté pour ${item2Name}`,
           {
             icon: '2️⃣',
             style: {
@@ -222,14 +236,57 @@ export function useTmiClient({
             position: 'bottom-right'
           }
         );
+      } else if (messageLower === 'super 1' || messageLower === 'super 2') {
+        // Super vote command
+        if (superVoteUsers.current.has(username)) {
+          console.log(`[TMI SUPER VOTE DEBUG] ${username} a déjà utilisé son super vote.`);
+          return;
+        }
+
+        votedItem = messageLower === 'super 1' ? 'item1' : 'item2';
+        const itemName = votedItem === 'item1' ? item1Name : item2Name;
+        
+        // Mark user as having used their super vote tournament-wide
+        superVoteUsers.current.add(username);
+        // Also mark in current match
+        superVotesThisMatch.current.add(username);
+        
+        toast(`⭐ ${username} a activé le SUPER VOTE pour ${itemName}! (+2 votes)`, {
+          icon: '⭐',
+          style: {
+            borderRadius: '10px',
+            background: '#f59e0b',
+            color: '#fff',
+          },
+          position: 'bottom-center'
+        });
+
+        // Add vote twice for super vote
+        votedUsers.current.add({username, votedItem});
+        
+        // Trigger animations twice for super vote
+        if (onVoteReceived) {
+          onVoteReceived(votedItem);
+          onVoteReceived(votedItem);
+        }
+        
+        // Update score twice for super vote
+        onScoreUpdate(currentMatchIndex, votedItem);
+        onScoreUpdate(currentMatchIndex, votedItem);
+        console.log(`[TMI SUPER VOTE DEBUG] Super vote de ${username} pour ${votedItem} ENREGISTRÉ (x2). Nouveaux votants:`, Array.from(votedUsers.current));
+        return;
       }
 
       if (votedItem) {
         votedUsers.current.add({username, votedItem});
+        
+        // Trigger animation before updating score
+        if (onVoteReceived) {
+          onVoteReceived(votedItem);
+        }
+        
         onScoreUpdate(currentMatchIndex, votedItem); // currentMatchIndex est utilisé ici
         console.log(`[TMI VOTE DEBUG] Vote de ${username} pour ${votedItem} ENREGISTRÉ. Nouveaux votants:`, Array.from(votedUsers.current));
-      } else {
-        // console.log(`[TMI VOTE DEBUG] Message de ${username} ("${messageLower}") n'est pas un vote valide.`);
       }
     };
 
@@ -242,7 +299,7 @@ export function useTmiClient({
         console.log(`TMI.js: Écouteur de messages désactivé (Match ID était: ${matchIdentifier}).`);
       }
     };
-  }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, onModifyScore, matchIdentifier]); // Ajout de matchIdentifier et onModifyScore
+  }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, onModifyScore, onVoteReceived, matchIdentifier]); // Ajout de matchIdentifier, onModifyScore et onVoteReceived
 
-  return { tmiClient, isTmiConnected, tmiError, setTmiError, votedUsers };
+  return { tmiClient, isTmiConnected, tmiError, setTmiError, votedUsers, superVotesThisMatch };
 }

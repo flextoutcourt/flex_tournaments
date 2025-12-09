@@ -16,6 +16,10 @@ interface ParticipantCardProps {
   buttonGradient: string; // e.g., 'from-blue-500 to-indigo-600'
   votedUsers: RefObject<Set<{username: string; votedItem: string}>>;
   number: number;
+  item1Score: number;
+  item2Score: number;
+  superVotesThisMatch?: React.MutableRefObject<Set<string>>;
+  registerBarRef?: (itemId: 'item1' | 'item2', ref: React.RefObject<HTMLDivElement>) => void;
 }
 
 const ParticipantCard: React.FC<ParticipantCardProps> = ({
@@ -27,7 +31,11 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   colorClass,
   buttonGradient,
   votedUsers,
-  number
+  number,
+  item1Score,
+  item2Score,
+  superVotesThisMatch,
+  registerBarRef,
 }) => {
 
   console.log(votedUsers);
@@ -121,7 +129,13 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
         {/* Vote Progress Bar - Compact */}
         <div className="flex-shrink-0">
-          <VoteBar votedUsers={votedUsers} number={number} />
+          <VoteBar 
+            votedUsers={votedUsers} 
+            number={number} 
+            item1Score={item1Score}
+            item2Score={item2Score}
+            registerBarRef={registerBarRef} 
+          />
         </div>
 
         {/* Winner Button - Compact */}
@@ -145,14 +159,22 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
             <span className="text-white/70 text-xs font-semibold uppercase">Derniers votes</span>
           </div>
           <div className="flex flex-wrap gap-1">
-            {votes.slice(0, 5).map((vote, index) => (
-              <div 
-                key={index} 
-                className={`bg-${accentColor}-600/30 border border-${accentColor}-600/50 px-1.5 py-0.5 rounded text-white text-xs font-medium`}
-              >
-                {vote.username}
-              </div>
-            ))}
+            {votes.slice(0, 5).map((vote, index) => {
+              const isSuperVote = superVotesThisMatch?.current.has(vote.username);
+              return (
+                <div 
+                  key={index} 
+                  className={`bg-${accentColor}-600/30 border px-1.5 py-0.5 rounded text-white text-xs font-medium ${
+                    isSuperVote 
+                      ? 'border-yellow-400/80 bg-yellow-500/10' 
+                      : `border-${accentColor}-600/50`
+                  }`}
+                >
+                  {isSuperVote && <span className="mr-0.5">⭐</span>}
+                  {vote.username}
+                </div>
+              );
+            })}
             {votes.length > 5 && (
               <div className="bg-slate-700 border border-slate-600 px-1.5 py-0.5 rounded text-white/70 text-xs font-medium">
                 +{votes.length - 5}

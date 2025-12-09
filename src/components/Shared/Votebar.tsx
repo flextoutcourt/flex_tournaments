@@ -1,21 +1,33 @@
 import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 interface VoteBarProps {
   votedUsers: React.MutableRefObject<Set<any>>;
   number: number;
+  item1Score: number;
+  item2Score: number;
+  registerBarRef?: (itemId: 'item1' | 'item2', ref: React.RefObject<HTMLDivElement>) => void;
 }
 
-const VoteBar: React.FC<VoteBarProps> = ({ votedUsers, number }) => {
-  const totalVotes = votedUsers.current?.size || 0;
-  const votesForItem = Array.from(votedUsers.current || []).filter(
-    (vote) => vote.votedItem === `item${number}`
-  ).length;
-  const percent = totalVotes > 0 ? Math.round((votesForItem / totalVotes) * 100) : 0;
+const VoteBar: React.FC<VoteBarProps> = ({ votedUsers, number, item1Score, item2Score, registerBarRef }) => {
+  const barRef = useRef<HTMLDivElement>(null);
+  const itemId = (`item${number}` as 'item1' | 'item2');
 
-  if (percent === 0) return null;
+  // Register this bar ref when component mounts or when registerBarRef changes
+  useEffect(() => {
+    if (registerBarRef) {
+      registerBarRef(itemId, barRef);
+    }
+  }, [registerBarRef, itemId]);
+
+  // Calculate percent based on displayed scores
+  const totalScore = item1Score + item2Score;
+  const currentScore = number === 1 ? item1Score : item2Score;
+  const percent = totalScore > 0 ? Math.round((currentScore / totalScore) * 100) : 0;
 
   return (
     <motion.div
+      ref={barRef}
       initial={{ opacity: 0, scaleY: 0 }}
       animate={{ opacity: 1, scaleY: 1 }}
       exit={{ opacity: 0, scaleY: 0 }}

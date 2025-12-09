@@ -87,7 +87,7 @@ export default function TournamentLivePage() {
   );
   
   // Hook pour TMI
-  const { isTmiConnected, tmiError, setTmiError, votedUsers, superVotesThisMatch } = useTmiClient({
+  const { isTmiConnected, tmiError, setTmiError, votedUsers } = useTmiClient({
     liveTwitchChannel,
     isTournamentActive,
     tournamentWinner,
@@ -95,7 +95,7 @@ export default function TournamentLivePage() {
     currentMatchIndex,
     onScoreUpdate: updateScore,
     onModifyScore: modifyScore,
-    onVoteReceived: handleVoteReceived,
+    onVoteReceived: animateVoteToTargetRef.current || undefined,
   });
 
   // Combiner les erreurs pour l'affichage
@@ -284,7 +284,6 @@ export default function TournamentLivePage() {
                 player1Ref={player1Ref}
                 player2Ref={player2Ref}
                 votedUsers={votedUsers}
-                superVotesThisMatch={superVotesThisMatch}
                 animateVoteToTargetRef={animateVoteToTargetRef}
               />
             ) : (

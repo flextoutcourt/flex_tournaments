@@ -6,6 +6,8 @@ import { cardVariants } from '@/animationVariants';
 import ParticipantCard from './TournamentItem';
 import { generateKeywords } from '@/utils/tournamentHelper';
 import { useTmiClient } from '@/hooks/useTmiClient';
+import VoteAnimationLayer from '@/components/Shared/VoteAnimationLayer';
+import { useVoteAnimation } from '@/hooks/useVoteAnimation';
 
 interface ActiveMatchViewProps {
   activeMatch: CurrentMatch;
@@ -16,6 +18,8 @@ interface ActiveMatchViewProps {
   player1Ref: React.MutableRefObject<YT.Player | null>;
   player2Ref: React.MutableRefObject<YT.Player | null>;
   votedUsers: RefObject<Set<{username: string; votedItem: string}>>
+  superVotesThisMatch?: React.MutableRefObject<Set<string>>;
+  animateVoteToTargetRef?: React.MutableRefObject<((itemId: 'item1' | 'item2') => void) | null>;
 }
 
 const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
@@ -26,18 +30,43 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
   onMouseLeavePlayer,
   player1Ref,
   player2Ref,
-  votedUsers
+  votedUsers,
+  superVotesThisMatch,
+  animateVoteToTargetRef,
 }) => {
+  // Initialize vote animation system
+  const {
+    activeTokens,
+    registerBarRef,
+    getTargetPosition,
+    animateVoteToTarget,
+    animationConfig,
+  } = useVoteAnimation({ duration: 800 });
+
+  // Expose the animation function to parent via ref
+  React.useEffect(() => {
+    if (animateVoteToTargetRef) {
+      animateVoteToTargetRef.current = animateVoteToTarget;
+    }
+  }, [animateVoteToTarget, animateVoteToTargetRef]);
 
   return (
-    <motion.div
-      key={activeMatch.item1.id + activeMatch.item2.id + activeMatch.roundNumber + activeMatch.matchNumberInRound}
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="w-full h-full flex flex-col gap-2"
-    >
+    <>
+      <VoteAnimationLayer
+        activeTokens={activeTokens}
+        getTargetPosition={getTargetPosition}
+        animationDuration={animationConfig.duration}
+        originX={animationConfig.originX}
+        originY={animationConfig.originY}
+      />
+      <motion.div
+        key={activeMatch.item1.id + activeMatch.item2.id + activeMatch.roundNumber + activeMatch.matchNumberInRound}
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="w-full h-full flex flex-col gap-2"
+      >
       {/* Ultra Compact Match Info Header */}
       <div className="flex-shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2 bg-gradient-to-r from-slate-800 to-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg">
@@ -87,6 +116,10 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
             buttonGradient="from-blue-500 to-indigo-600"
             votedUsers={votedUsers}
             number={1}
+            item1Score={activeMatch.item1.score}
+            item2Score={activeMatch.item2.score}
+            superVotesThisMatch={superVotesThisMatch}
+            registerBarRef={registerBarRef}
           />
 
           {/* Mobile VS Divider */}
@@ -109,6 +142,10 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
             buttonGradient="from-red-500 to-pink-500"
             votedUsers={votedUsers}
             number={2}
+            item1Score={activeMatch.item1.score}
+            item2Score={activeMatch.item2.score}
+            superVotesThisMatch={superVotesThisMatch}
+            registerBarRef={registerBarRef}
           />
         </div>
       </div>
@@ -123,6 +160,7 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
         </div>
       </div>
     </motion.div>
+    </>
   );
 };
 
