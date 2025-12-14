@@ -16,6 +16,7 @@ const VoteBar: React.FC<VoteBarProps> = ({ votedUsers, number, item1Score, item2
   // Register this bar ref when component mounts or when registerBarRef changes
   useEffect(() => {
     if (registerBarRef) {
+	//@ts-ignore
       registerBarRef(itemId, barRef);
     }
   }, [registerBarRef, itemId]);
