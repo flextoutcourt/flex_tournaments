@@ -193,7 +193,13 @@ export default async function TournamentPage({
                   </h2>
                   
                   {tournament.Items.length > 0 ? (
-                    <TournamentItemsList items={tournament.Items} tournamentId={tournament.id} status={currentStatus} />
+                    <TournamentItemsList 
+                      items={tournament.Items} 
+                      tournamentId={tournament.id} 
+                      status={currentStatus}
+                      twoCategoryMode={tournament.mode === 'TWO_CATEGORY'}
+                      categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA || '', tournament.categoryB || ''].filter(Boolean) : null}
+                    />
                   ) : (
                     <div className="text-center py-12">
                       <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600/20 to-indigo-600/20 rounded-full mb-4">

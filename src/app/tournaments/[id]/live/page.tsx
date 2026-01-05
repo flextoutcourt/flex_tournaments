@@ -52,6 +52,8 @@ export default function TournamentLivePage() {
   const [hasShownRestoreNotification, setHasShownRestoreNotification] = useState(false);
   const [showChannelModal, setShowChannelModal] = useState(false);
   const [liveTwitchChannel, setLiveTwitchChannel] = useState<string | null>(urlChannel);
+  const [showFirstRoundRecap, setShowFirstRoundRecap] = useState(false);
+  const [lastRoundNumber, setLastRoundNumber] = useState(1);
 
   // Ref to store the vote animation trigger function
   const animateVoteToTargetRef = React.useRef<((itemId: 'item1' | 'item2') => void) | null>(null);
@@ -64,18 +66,24 @@ export default function TournamentLivePage() {
   }, []);
 
   // Hook pour les données initiales
-  const { tournamentId, tournamentTitle, initialItems, isLoadingData, dataError, setDataError: setTournamentDataError, tournamentMode } = useTournamentData();
+  const { tournamentId, tournamentTitle, initialItems, isLoadingData, dataError, setDataError: setTournamentDataError, tournamentMode, tournamentCategories } = useTournamentData();
+
+  // Extract category names for display
+  const categoryA = tournamentCategories?.[0];
+  const categoryB = tournamentCategories?.[1];
 
   // Hook pour la logique du tournoi
   const {
     matches, currentMatchIndex, tournamentWinner, secondPlace, thirdPlace, setTournamentWinner, currentRoundNumber,
     isTournamentActive, setIsTournamentActive, selectedItemCountOption, setSelectedItemCountOption,
-    activeMatch, startTournament, handleDeclareWinnerAndNext, handleStopTournament, updateScore, modifyScore,
+    activeMatch, startTournament, handleDeclareWinnerAndNext, handleStopTournament, updateScore, modifyScore, categoryAWins, categoryBWins,
   } = useTournamentLogic({ 
     initialItems, 
     onTournamentError: setPageError, 
     twoCategoryMode: tournamentMode === 'TWO_CATEGORY',
-    tournamentId
+    tournamentId,
+    categoryA: categoryA || null,
+    categoryB: categoryB || null,
   });
 
   // Hook pour l'API YouTube et les players
@@ -127,6 +135,13 @@ export default function TournamentLivePage() {
     }
   }, [isTournamentActive, matches.length, hasShownRestoreNotification, urlChannel, liveTwitchChannel, isLoadingData]);
 
+  // Detect when first round ends and show recap
+  useEffect(() => {
+    if (tournamentMode === 'TWO_CATEGORY' && currentRoundNumber > lastRoundNumber && lastRoundNumber === 1) {
+      setShowFirstRoundRecap(true);
+    }
+    setLastRoundNumber(currentRoundNumber);
+  }, [currentRoundNumber, lastRoundNumber, tournamentMode]);
 
   useEffect(() => {
     if (tournamentWinner) {
@@ -269,6 +284,144 @@ export default function TournamentLivePage() {
             generalError={pageError && activeMatch ? pageError : null}
           />
       </div>
+
+      {/* Category Counters - Only for TWO_CATEGORY mode and first round */}
+      {tournamentMode === 'TWO_CATEGORY' && isTournamentActive && currentRoundNumber === 1 && (
+        <div className="bg-gradient-to-r from-slate-800/40 to-slate-900/40 border-b border-slate-700/50 backdrop-blur-sm">
+          <div className="max-w-[1800px] mx-auto px-4 md:px-8 py-4 flex justify-center gap-8">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-500/30 rounded-lg px-6 py-3"
+            >
+              <span className="text-sm font-semibold text-blue-300">{categoryA}</span>
+              <div className="w-16 h-12 bg-blue-600/20 border-2 border-blue-500 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-blue-300">{categoryAWins}</span>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-3 bg-gradient-to-br from-pink-900/30 to-pink-800/20 border border-pink-500/30 rounded-lg px-6 py-3"
+            >
+              <span className="text-sm font-semibold text-pink-300">{categoryB}</span>
+              <div className="w-16 h-12 bg-pink-600/20 border-2 border-pink-500 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-pink-300">{categoryBWins}</span>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      )}
+
+      {/* First Round Recap Modal */}
+      <AnimatePresence>
+        {showFirstRoundRecap && tournamentMode === 'TWO_CATEGORY' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowFirstRoundRecap(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-purple-500/30 rounded-2xl p-8 max-w-2xl w-full shadow-2xl"
+            >
+              {/* Header */}
+              <div className="text-center mb-8">
+                <h2 className="text-4xl font-black bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent mb-2">
+                  🏁 Fin de la 1ère Salve
+                </h2>
+                <p className="text-gray-400">Résumé des scores par catégorie</p>
+              </div>
+
+              {/* Scores */}
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                {/* Category A */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-gradient-to-br from-blue-600/20 to-blue-500/10 border-2 border-blue-500/40 rounded-xl p-6 text-center"
+                >
+                  <div className="text-4xl mb-2">🎵</div>
+                  <p className="text-blue-300 text-sm font-semibold mb-3">{categoryA}</p>
+                  <div className="text-5xl font-black text-blue-300">{categoryAWins}</div>
+                  <p className="text-gray-400 text-xs mt-2">victoire{categoryAWins !== 1 ? 's' : ''}</p>
+                </motion.div>
+
+                {/* Category B */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-gradient-to-br from-pink-600/20 to-pink-500/10 border-2 border-pink-500/40 rounded-xl p-6 text-center"
+                >
+                  <div className="text-4xl mb-2">🎸</div>
+                  <p className="text-pink-300 text-sm font-semibold mb-3">{categoryB}</p>
+                  <div className="text-5xl font-black text-pink-300">{categoryBWins}</div>
+                  <p className="text-gray-400 text-xs mt-2">victoire{categoryBWins !== 1 ? 's' : ''}</p>
+                </motion.div>
+              </div>
+
+              {/* Leader */}
+              <div className="mb-8 text-center">
+                {categoryAWins > categoryBWins ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="inline-block"
+                  >
+                    <div className="bg-gradient-to-r from-blue-600/40 to-blue-500/30 border-2 border-blue-500/50 rounded-lg px-6 py-3">
+                      <p className="text-blue-300 font-bold">🎵 {categoryA} est en tête!</p>
+                    </div>
+                  </motion.div>
+                ) : categoryBWins > categoryAWins ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="inline-block"
+                  >
+                    <div className="bg-gradient-to-r from-pink-600/40 to-pink-500/30 border-2 border-pink-500/50 rounded-lg px-6 py-3">
+                      <p className="text-pink-300 font-bold">🎸 {categoryB} est en tête!</p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="inline-block"
+                  >
+                    <div className="bg-gradient-to-r from-purple-600/40 to-indigo-500/30 border-2 border-purple-500/50 rounded-lg px-6 py-3">
+                      <p className="text-purple-300 font-bold">⚖️ C'est l'égalité parfaite!</p>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              {/* Continue Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => setShowFirstRoundRecap(false)}
+                className="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <span>🚀 Continuer le tournoi</span>
+                </span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Arena */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 md:px-8 py-8 md:py-12">

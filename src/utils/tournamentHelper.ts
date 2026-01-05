@@ -13,7 +13,12 @@ export const generateKeywords = (itemName: string): string[] => {
   return keywords.slice(0, 3);
 };
 
-export const generateMatches = (participants: Item[], roundNum: number, twoCategoryMode: boolean = false): GenerateMatchesResult => {
+export const generateMatches = (
+  participants: Item[], 
+  roundNum: number, 
+  twoCategoryMode: boolean = false,
+  orderedCategoryNames?: [string, string]
+): GenerateMatchesResult => {
   console.log(`Génération des matchs pour Round ${roundNum} avec participants:`, participants.map(p => p.name));
   if (participants.length === 0) {
     return { matches: [], byeParticipant: null };
@@ -34,9 +39,25 @@ export const generateMatches = (participants: Item[], roundNum: number, twoCateg
       map[cat].push(p);
     });
 
-    const cats = Object.keys(map).filter(c => c !== '__none__');
+    let cats = Object.keys(map).filter(c => c !== '__none__');
+    
+    // For first round with specified category order, use that order
+    // For subsequent rounds, use alphabetical sort for consistency
+    if (roundNum === 1 && orderedCategoryNames && cats.length === 2) {
+      // Try to order based on provided category names
+      cats = cats.sort((a, b) => {
+        const indexA = orderedCategoryNames.indexOf(a);
+        const indexB = orderedCategoryNames.indexOf(b);
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+      });
+    } else {
+      cats = cats.sort();
+    }
+
     // Si exactement 2 catégories non-null présentes, on paire cross-catégorie
     if (cats.length === 2) {
+      // For first round: cats[0] on left (item1), cats[1] on right (item2)
+      // For subsequent rounds: normal random matching
       const a = shuffleArray(map[cats[0]]);
       const b = shuffleArray(map[cats[1]]);
 

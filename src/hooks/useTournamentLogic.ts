@@ -9,6 +9,8 @@ interface UseTournamentLogicProps {
   onTournamentError: (message: string) => void;
   twoCategoryMode?: boolean;
   tournamentId?: string | null;
+  categoryA?: string | null;
+  categoryB?: string | null;
 }
 
 interface TournamentState {
@@ -22,9 +24,11 @@ interface TournamentState {
   isTournamentActive: boolean;
   selectedItemCountOption: string;
   participantsForThisRun: Item[];
+  categoryAWins: number;
+  categoryBWins: number;
 }
 
-export function useTournamentLogic({ initialItems, onTournamentError, twoCategoryMode = false, tournamentId = null }: UseTournamentLogicProps) {
+export function useTournamentLogic({ initialItems, onTournamentError, twoCategoryMode = false, tournamentId = null, categoryA = null, categoryB = null }: UseTournamentLogicProps) {
   const getStorageKey = () => tournamentId ? `tournamentState_${tournamentId}` : null;
 
   // Initialize state from localStorage if available
@@ -39,6 +43,8 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
   const [selectedItemCountOption, setSelectedItemCountOption] = useState<string>("all");
   const [participantsForThisRun, setParticipantsForThisRun] = useState<Item[]>([]);
   const [isStateRestored, setIsStateRestored] = useState(false);
+  const [categoryAWins, setCategoryAWins] = useState(0);
+  const [categoryBWins, setCategoryBWins] = useState(0);
 
   // Restore state from localStorage on mount
   useEffect(() => {
@@ -61,6 +67,8 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
         setIsTournamentActive(state.isTournamentActive);
         setSelectedItemCountOption(state.selectedItemCountOption);
         setParticipantsForThisRun(state.participantsForThisRun);
+        setCategoryAWins(state.categoryAWins || 0);
+        setCategoryBWins(state.categoryBWins || 0);
       }
     } catch (error) {
       console.error('Error restoring tournament state:', error);
@@ -87,6 +95,8 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
       isTournamentActive,
       selectedItemCountOption,
       participantsForThisRun,
+      categoryAWins,
+      categoryBWins,
     };
 
     try {
@@ -95,7 +105,7 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
     } catch (error) {
       console.error('Error saving tournament state:', error);
     }
-  }, [matches, currentMatchIndex, advancingToNextRound, tournamentWinner, secondPlace, thirdPlace, currentRoundNumber, isTournamentActive, selectedItemCountOption, participantsForThisRun, isStateRestored]);
+  }, [matches, currentMatchIndex, advancingToNextRound, tournamentWinner, secondPlace, thirdPlace, currentRoundNumber, isTournamentActive, selectedItemCountOption, participantsForThisRun, categoryAWins, categoryBWins, isStateRestored]);
 
   const activeMatch = useMemo(() => {
     if (!isTournamentActive || tournamentWinner || matches.length === 0 || currentMatchIndex >= matches.length) {
@@ -138,9 +148,12 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
     setTournamentWinner(null);
     setSecondPlace(null);
     setThirdPlace(null);
+    setCategoryAWins(0);
+    setCategoryBWins(0);
     setIsTournamentActive(true);
 
-  const { matches: firstRoundMatches, byeParticipant: firstRoundBye } = generateMatches(participants, 1, twoCategoryMode);
+  const orderedCats = twoCategoryMode && categoryA && categoryB ? [categoryA, categoryB] as [string, string] : undefined;
+  const { matches: firstRoundMatches, byeParticipant: firstRoundBye } = generateMatches(participants, 1, twoCategoryMode, orderedCats);
     setMatches(firstRoundMatches);
     setCurrentMatchIndex(0);
     setAdvancingToNextRound(firstRoundBye ? [firstRoundBye] : []);
@@ -150,7 +163,7 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
       setIsTournamentActive(false);
       console.log(`🏆 VAINQUEUR (bye initial unique): ${firstRoundBye.name} 🏆`);
     }
-  }, [initialItems, selectedItemCountOption, onTournamentError, twoCategoryMode]);
+  }, [initialItems, selectedItemCountOption, onTournamentError, twoCategoryMode, categoryA, categoryB]);
 
   const handleDeclareWinnerAndNext = useCallback((winnerKey: 'item1' | 'item2') => {
     if (!activeMatch || tournamentWinner) return;
@@ -161,6 +174,36 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
     const loserParticipant: MatchParticipant = loserOfMatch;
     // Convert winner to Item for advancers array
     const winnerItem: Item = { id: winnerOfMatch.id, name: winnerOfMatch.name, youtubeUrl: winnerOfMatch.youtubeUrl, youtubeVideoId: winnerOfMatch.youtubeVideoId, category: winnerOfMatch.category };
+    
+    // Debug log
+    console.log('Winner declared:', {
+      twoCategoryMode,
+      winnerCategory: winnerOfMatch.category,
+      winnerName: winnerOfMatch.name,
+      categoryA,
+      categoryB
+    });
+    
+    // Incrémenter les compteurs de catégories en mode TWO_CATEGORY
+    if (twoCategoryMode && winnerOfMatch.category) {
+      const normalizedWinnerCategory = winnerOfMatch.category.trim().toLowerCase();
+      const normalizedCategoryA = categoryA?.trim().toLowerCase();
+      const normalizedCategoryB = categoryB?.trim().toLowerCase();
+      
+      console.log('Incrementing category counter:', {
+        normalizedWinnerCategory,
+        normalizedCategoryA,
+        normalizedCategoryB
+      });
+      
+      if (normalizedWinnerCategory === normalizedCategoryA) {
+        console.log('Category A wins!');
+        setCategoryAWins(prev => prev + 1);
+      } else if (normalizedWinnerCategory === normalizedCategoryB) {
+        console.log('Category B wins!');
+        setCategoryBWins(prev => prev + 1);
+      }
+    }
     
     const currentRoundAdvancers = [...advancingToNextRound, winnerItem];
 
@@ -203,7 +246,8 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
         const nextRound = currentRoundNumber + 1;
         setCurrentRoundNumber(nextRound);
         
-  const { matches: nextMatchesGenerated, byeParticipant: nextRoundBye } = generateMatches(currentRoundAdvancers, nextRound, twoCategoryMode);
+  const orderedCats = twoCategoryMode && categoryA && categoryB ? [categoryA, categoryB] as [string, string] : undefined;
+  const { matches: nextMatchesGenerated, byeParticipant: nextRoundBye } = generateMatches(currentRoundAdvancers, nextRound, twoCategoryMode, orderedCats);
         setMatches(nextMatchesGenerated);
         setCurrentMatchIndex(0);
         setAdvancingToNextRound(nextRoundBye ? [nextRoundBye] : []);
@@ -220,7 +264,7 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
         setIsTournamentActive(false); // Fin du tournoi, aucun qualifié
       }
     }
-  }, [activeMatch, tournamentWinner, advancingToNextRound, matches, currentMatchIndex, currentRoundNumber, onTournamentError]);
+  }, [activeMatch, tournamentWinner, advancingToNextRound, matches, currentMatchIndex, currentRoundNumber, onTournamentError, twoCategoryMode, categoryA, categoryB]);
 
   const handleStopTournament = useCallback(() => {
     setIsTournamentActive(false);
@@ -232,6 +276,8 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
     setThirdPlace(null);
     setCurrentRoundNumber(1);
     setParticipantsForThisRun([]);
+    setCategoryAWins(0);
+    setCategoryBWins(0);
     onTournamentError(""); // Clear errors
     
     // Clear saved state from localStorage
@@ -308,6 +354,8 @@ export function useTournamentLogic({ initialItems, onTournamentError, twoCategor
     handleStopTournament,
     updateScore,
     modifyScore, // Moderator function to add/remove votes
-    setMatches // Pourrait être utile pour des cas spécifiques de reset/manipulation externe
+    setMatches, // Pourrait être utile pour des cas spécifiques de reset/manipulation externe
+    categoryAWins,
+    categoryBWins,
   };
 }

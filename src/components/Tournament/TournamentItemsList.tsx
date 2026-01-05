@@ -11,13 +11,16 @@ interface TournamentItemsListProps {
   items: Item[];
   tournamentId: string;
   status: string; // Statut actuel du tournoi ('SETUP', 'PUBLISHED', etc.)
+  twoCategoryMode?: boolean;
+  categories?: string[] | null;
 }
 
-export default function TournamentItemsList({ items, tournamentId, status }: TournamentItemsListProps) {
+export default function TournamentItemsList({ items, tournamentId, status, twoCategoryMode = false, categories = null }: TournamentItemsListProps) {
   const router = useRouter();
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<string>(categories?.[0] || 'all');
 
   // Filter items based on search query
   const filteredItems = useMemo(() => {
@@ -114,80 +117,188 @@ export default function TournamentItemsList({ items, tournamentId, status }: Tou
         </div>
       )}
 
-      {filteredItems.map((item, index) => {
-        // Find the original index for display
-        const originalIndex = items.findIndex(i => i.id === item.id);
-        return (
-          <div 
-            key={item.id} 
-            className="group/item bg-gradient-to-r from-slate-700/50 to-slate-600/50 border-2 border-slate-600/30 hover:border-purple-500/50 p-4 md:p-5 rounded-xl shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm relative overflow-hidden"
-          >
-            {/* Animated gradient on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 to-indigo-600/0 group-hover/item:from-purple-600/10 group-hover/item:to-indigo-600/10 transition-all duration-300"></div>
-            
-            <div className="flex-grow relative z-10">
-              <div className="flex items-center gap-3 mb-2">
-                {/* Rank badge */}
-                <div className="relative">
-                  <div className="absolute inset-0 bg-purple-500 rounded-lg blur-md opacity-50 group-hover/item:opacity-70 transition-opacity"></div>
-                  <div className="relative bg-gradient-to-br from-purple-600 to-indigo-600 px-3 py-1.5 rounded-lg shadow-lg">
-                    <span className="text-white font-black text-sm">#{originalIndex + 1}</span>
-                  </div>
-                </div>
-                
-                {/* Participant name */}
-                <p className="text-base md:text-lg font-bold text-white group-hover/item:text-purple-300 transition-colors">
-                  {item.name}
-                </p>
-              </div>
+      {/* Two-column layout for TWO_CATEGORY mode */}
+      {twoCategoryMode && categories && categories.length === 2 ? (
+        <div className="space-y-4">
+          {/* Tabs */}
+          <div className="flex gap-2 border-b-2 border-slate-700/50">
+            {categories.map((category, index) => {
+              const isActive = activeTab === category;
+              const emoji = index === 0 ? '🎵' : '🎸';
+              const categoryItems = filteredItems.filter(item => 
+                item.category?.trim().toLowerCase() === category.trim().toLowerCase()
+              );
               
-              {item.youtubeUrl && (
-                <Link 
-                  href={item.youtubeUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="inline-flex items-center gap-2 text-xs md:text-sm text-blue-400 hover:text-blue-300 transition-colors group/link"
+              return (
+                <button
+                  key={category}
+                  onClick={() => setActiveTab(category)}
+                  className={`px-6 py-3 font-bold rounded-t-xl transition-all duration-300 flex items-center gap-2 border-b-4 ${
+                    isActive
+                      ? 'bg-gradient-to-r from-purple-600/40 to-indigo-600/40 border-purple-500 text-white'
+                      : 'bg-slate-700/20 border-transparent text-gray-400 hover:text-gray-200 hover:bg-slate-700/30'
+                  }`}
                 >
-                  <div className="flex items-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-500/30 transition-all">
-                    <FaYoutube className="group-hover/link:animate-pulse" /> 
-                    <span className="font-semibold">Voir sur YouTube</span>
-                  </div>
-                </Link>
-              )}
-            </div>
-            
-            {status === 'SETUP' && (
-              <div className="flex gap-2 sm:mt-0 flex-shrink-0 relative z-10">
-                {/* Edit Button */}
-                <button 
-                  disabled={deletingItemId === item.id}
-                  className="group/edit relative p-3 bg-slate-700/50 hover:bg-blue-600/30 rounded-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 border-2 border-transparent hover:border-blue-500/50"
-                  title="Éditer le participant"
-                >
-                  <FaEdit className="text-gray-400 group-hover/edit:text-blue-400 transition-colors" />
+                  <span className="text-lg">{emoji}</span>
+                  <span>{category}</span>
+                  <span className={`ml-2 px-2.5 py-0.5 rounded-full text-sm font-black ${
+                    isActive
+                      ? 'bg-purple-500/40 text-purple-200'
+                      : 'bg-slate-600/50 text-gray-400'
+                  }`}>
+                    {categoryItems.length}
+                  </span>
                 </button>
-                
-                {/* Delete Button */}
-                <button 
-                  onClick={() => handleDeleteItem(item.id)}
-                  disabled={deletingItemId === item.id}
-                  className="group/delete relative p-3 bg-slate-700/50 hover:bg-red-600/30 rounded-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 border-2 border-transparent hover:border-red-500/50"
-                  title="Supprimer le participant"
-                >
-                  {deletingItemId === item.id ? (
-                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : (
-                    <FaTrash className="text-gray-400 group-hover/delete:text-red-400 transition-colors" />
-                  )}
-                </button>
-              </div>
-            )}
+              );
+            })}
           </div>
-        );
-      })}
+
+          {/* Tab Content */}
+          <div className="space-y-3">
+            {(() => {
+              const categoryItems = filteredItems.filter(item => 
+                item.category?.trim().toLowerCase() === activeTab.trim().toLowerCase()
+              );
+              
+              if (categoryItems.length === 0) {
+                return (
+                  <div className="text-center py-8 bg-slate-700/20 border-2 border-dashed border-slate-600/50 rounded-xl">
+                    <p className="text-gray-400 text-sm">Aucun participant dans cette catégorie</p>
+                  </div>
+                );
+              }
+              
+              return categoryItems.map((item) => {
+                const originalIndex = items.findIndex(i => i.id === item.id);
+                return (
+                  <ItemCard 
+                    key={item.id}
+                    item={item}
+                    originalIndex={originalIndex}
+                    tournamentId={tournamentId}
+                    status={status}
+                    deletingItemId={deletingItemId}
+                    onDelete={handleDeleteItem}
+                  />
+                );
+              });
+            })()}
+          </div>
+        </div>
+      ) : (
+        /* Single column layout for STANDARD mode */
+        <div className="space-y-3">
+          {filteredItems.map((item) => {
+            const originalIndex = items.findIndex(i => i.id === item.id);
+            return (
+              <ItemCard 
+                key={item.id}
+                item={item}
+                originalIndex={originalIndex}
+                tournamentId={tournamentId}
+                status={status}
+                deletingItemId={deletingItemId}
+                onDelete={handleDeleteItem}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Extracted ItemCard component for reusability */
+function ItemCard({ 
+  item, 
+  originalIndex, 
+  tournamentId, 
+  status, 
+  deletingItemId, 
+  onDelete,
+  accentColor = 'purple'
+}: {
+  item: Item;
+  originalIndex: number;
+  tournamentId: string;
+  status: string;
+  deletingItemId: string | null;
+  onDelete: (itemId: string) => void;
+  accentColor?: string;
+}) {
+  const colors = {
+    purple: 'from-purple-600 to-indigo-600',
+    blue: 'from-blue-600 to-cyan-600',
+    pink: 'from-pink-600 to-rose-600',
+  };
+  
+  return (
+    <div 
+      className="group/item bg-gradient-to-r from-slate-700/50 to-slate-600/50 border-2 border-slate-600/30 hover:border-purple-500/50 p-4 md:p-5 rounded-xl shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-300 hover:scale-[1.01] backdrop-blur-sm relative overflow-hidden"
+    >
+      {/* Animated gradient on hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 to-indigo-600/0 group-hover/item:from-purple-600/10 group-hover/item:to-indigo-600/10 transition-all duration-300"></div>
+      
+      <div className="flex-grow relative z-10">
+        <div className="flex items-center gap-3 mb-2">
+          {/* Rank badge */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-purple-500 rounded-lg blur-md opacity-50 group-hover/item:opacity-70 transition-opacity"></div>
+            <div className={`relative bg-gradient-to-br ${colors[accentColor as keyof typeof colors] || colors.purple} px-3 py-1.5 rounded-lg shadow-lg`}>
+              <span className="text-white font-black text-sm">#{originalIndex + 1}</span>
+            </div>
+          </div>
+          
+          {/* Participant name */}
+          <p className="text-base md:text-lg font-bold text-white group-hover/item:text-purple-300 transition-colors">
+            {item.name}
+          </p>
+        </div>
+        
+        {item.youtubeUrl && (
+          <Link 
+            href={item.youtubeUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="inline-flex items-center gap-2 text-xs md:text-sm text-blue-400 hover:text-blue-300 transition-colors group/link"
+          >
+            <div className="flex items-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg border border-blue-500/30 transition-all">
+              <FaYoutube className="group-hover/link:animate-pulse" /> 
+              <span className="font-semibold">Voir sur YouTube</span>
+            </div>
+          </Link>
+        )}
+      </div>
+      
+      {status === 'SETUP' && (
+        <div className="flex gap-2 sm:mt-0 flex-shrink-0 relative z-10">
+          {/* Edit Button */}
+          <button 
+            disabled={deletingItemId === item.id}
+            className="group/edit relative p-3 bg-slate-700/50 hover:bg-blue-600/30 rounded-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 border-2 border-transparent hover:border-blue-500/50"
+            title="Éditer le participant"
+          >
+            <FaEdit className="text-gray-400 group-hover/edit:text-blue-400 transition-colors" />
+          </button>
+          
+          {/* Delete Button */}
+          <button 
+            onClick={() => onDelete(item.id)}
+            disabled={deletingItemId === item.id}
+            className="group/delete relative p-3 bg-slate-700/50 hover:bg-red-600/30 rounded-lg transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 border-2 border-transparent hover:border-red-500/50"
+            title="Supprimer le participant"
+          >
+            {deletingItemId === item.id ? (
+              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <FaTrash className="text-gray-400 group-hover/delete:text-red-400 transition-colors" />
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

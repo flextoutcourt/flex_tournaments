@@ -278,24 +278,55 @@ export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode =
 
           {/* Si le tournoi est en mode deux-catégories */}
           {twoCategoryMode && (
-            <div className="space-y-2">
-              <label htmlFor="itemCategory" className="text-sm font-bold text-gray-200">Catégorie</label>
-              <select
-                id="itemCategory"
-                {...register('category')}
-                className={`w-full px-4 py-3 bg-slate-700/50 border-2 rounded-xl shadow-sm text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all backdrop-blur-sm ${errors?.category ? 'border-red-500/50' : 'border-slate-600/50'}`}
-                defaultValue={''}
-              >
-                <option value="" disabled>Choisir une catégorie</option>
-                {(categories || []).map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-gray-200">Sélectionner une catégorie</label>
+              <div className="grid grid-cols-2 gap-3">
+                {(categories || []).map((category, index) => {
+                  const isSelected = watch('category') === category;
+                  const isFirstCategory = index === 0;
+                  const accentColor = isFirstCategory ? 'blue' : 'pink';
+                  const hoverColor = isFirstCategory ? 'from-blue-600/40 to-blue-500/30' : 'from-pink-600/40 to-pink-500/30';
+                  const borderColor = isFirstCategory ? 'border-blue-500/50' : 'border-pink-500/50';
+                  const selectedBg = isFirstCategory ? 'from-blue-600/50 to-blue-500/40 border-blue-400' : 'from-pink-600/50 to-pink-500/40 border-pink-400';
+                  
+                  return (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => setValue('category', category)}
+                      className={`relative group px-4 py-4 rounded-xl font-bold text-center transition-all duration-300 border-2 overflow-hidden ${
+                        isSelected
+                          ? `bg-gradient-to-br ${selectedBg} text-white shadow-lg scale-105`
+                          : `bg-gradient-to-br from-slate-700/40 to-slate-600/30 ${borderColor} text-gray-200 hover:${hoverColor} hover:scale-102`
+                      }`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                        style={{
+                          backgroundImage: isFirstCategory
+                            ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2))'
+                            : 'linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(244, 63, 94, 0.2))'
+                        }}
+                      ></div>
+                      <div className="relative z-10 flex items-center justify-center gap-2">
+                        <span className="text-lg">{isFirstCategory ? '🎵' : '🎸'}</span>
+                        <span className="truncate">{category}</span>
+                        {isSelected && <span className="ml-1">✓</span>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
               {twoCategoryMode && !watch('category') && (
-                <p className="text-xs text-yellow-400 bg-yellow-500/10 px-3 py-2 rounded-lg border border-yellow-500/30">Veuillez sélectionner une catégorie.</p>
+                <p className="text-xs text-yellow-400 bg-yellow-500/10 px-3 py-2 rounded-lg border border-yellow-500/30">⚠️ Veuillez sélectionner une catégorie.</p>
               )}
             </div>
           )}
+
+          {/* Hidden input for category (needed for form submission) */}
+          <input
+            type="hidden"
+            {...register('category')}
+          />
 
           {/* Champ Lien YouTube */}
           <div className="space-y-2">
