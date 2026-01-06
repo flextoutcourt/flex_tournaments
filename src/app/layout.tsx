@@ -104,6 +104,17 @@ export default function RootLayout({
             })(window,document,'script','dataLayer','GTM-N8NJQMTZ');`,
           }}
         />
+
+        {/* Google Analytics 4 */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-VVHZN6EHWN"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-VVHZN6EHWN');`,
+          }}
+        />
       </head>
       <body className="bg-slate-900 text-gray-100 min-h-screen flex flex-col antialiased">
         {/* Google Tag Manager (noscript) */}
