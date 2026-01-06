@@ -1,3 +1,22 @@
+export const metadata = {
+  title: 'Conditions d\'Utilisation - Flex Tournaments',
+  description: 'Lisez nos conditions générales d\'utilisation et comprenez vos droits et responsabilités en tant qu\'utilisateur.',
+  keywords: 'conditions, termes, TOS, légal, droits',
+  openGraph: {
+    title: 'Conditions d\'Utilisation - Flex Tournaments',
+    description: 'Nos conditions générales d\'utilisation',
+    url: 'https://flex-tournaments.com/conditions',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://flex-tournaments.com/conditions',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
 export default function ConditionsPage() {
   return (
     <div className="min-h-screen flex flex-col">

@@ -1,5 +1,20 @@
 import Link from 'next/link';
 
+export const metadata = {
+  title: 'Support - Flex Tournaments',
+  description: 'Besoin d\'aide ? Contactez notre équipe de support par email ou Discord. Consultez notre aide et FAQ pour résoudre rapidement vos problèmes.',
+  keywords: 'support, aide, contact, FAQ, assistance client',
+  openGraph: {
+    title: 'Support - Flex Tournaments',
+    description: 'Contactez notre équipe de support pour une aide rapide',
+    url: 'https://flex-tournaments.com/support',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://flex-tournaments.com/support',
+  },
+};
+
 export default function SupportPage() {
   return (
     <div className="min-h-screen flex flex-col">

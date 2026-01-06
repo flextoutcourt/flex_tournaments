@@ -1,3 +1,22 @@
+export const metadata = {
+  title: 'Politique de Cookies - Flex Tournaments',
+  description: 'Comprenez comment nous utilisons les cookies et comment gérer vos préférences de consentement.',
+  keywords: 'cookies, consentement, cookies policy, tracking',
+  openGraph: {
+    title: 'Politique de Cookies - Flex Tournaments',
+    description: 'Notre politique de cookies et gestion du consentement',
+    url: 'https://flex-tournaments.com/cookies',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://flex-tournaments.com/cookies',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
 export default function CookiesPage() {
   return (
     <div className="min-h-screen flex flex-col">

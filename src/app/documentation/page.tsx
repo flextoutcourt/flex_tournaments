@@ -1,6 +1,21 @@
 import Link from 'next/link';
 import { FaArrowRight } from 'react-icons/fa';
 
+export const metadata = {
+  title: 'Documentation - Flex Tournaments',
+  description: 'Guide complet pour bien commencer avec Flex Tournaments. Découvrez nos fonctionnalités, intégrations API et réponses aux questions fréquentes.',
+  keywords: 'documentation, tutoriel, guide, API, intégration Twitch',
+  openGraph: {
+    title: 'Documentation - Flex Tournaments',
+    description: 'Apprenez à utiliser Flex Tournaments avec notre guide complet',
+    url: 'https://flex-tournaments.com/documentation',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://flex-tournaments.com/documentation',
+  },
+};
+
 export default function DocumentationPage() {
   return (
     <div className="min-h-screen flex flex-col">

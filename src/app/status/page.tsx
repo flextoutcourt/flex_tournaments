@@ -1,3 +1,18 @@
+export const metadata = {
+  title: 'État du Service - Flex Tournaments',
+  description: 'Consultez l\'état actuel de nos services, l\'historique des incidents et les statistiques de disponibilité.',
+  keywords: 'statut, disponibilité, état du service, uptime, incidents',
+  openGraph: {
+    title: 'État du Service - Flex Tournaments',
+    description: 'Vérifiez l\'état de nos services en temps réel',
+    url: 'https://flex-tournaments.com/status',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://flex-tournaments.com/status',
+  },
+};
+
 export default function StatusPage() {
   const statuses = [
     { name: 'Site Web', status: 'Opérationnel', uptime: '99.98%' },

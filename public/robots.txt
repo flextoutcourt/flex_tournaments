@@ -1,9 +1,40 @@
-# Allow all crawlers
+# Flex Tournaments - Robots.txt
+# Generated: 2026-01-06
+
+# Allow all good crawlers
 User-agent: *
 Allow: /
+Allow: /tournaments
+Allow: /documentation
+Allow: /support
+Allow: /status
+Allow: /conditions
+Allow: /confidentialite
+Allow: /cookies
+Allow: /auth/signin
+Allow: /auth/signup
 
-# Disallow admin and API routes
+# Disallow API routes and admin
 Disallow: /api/
+Disallow: /admin/
+Disallow: /*.json$
+Disallow: /auth/
+
+# Specific rules for search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
 
 # Sitemap location
 Sitemap: https://flex-tournaments.com/sitemap.xml
+
+# Crawl delay to be respectful
+Crawl-delay: 0.5

@@ -1,3 +1,22 @@
+export const metadata = {
+  title: 'Politique de Confidentialité - Flex Tournaments',
+  description: 'Découvrez comment nous collectons, utilisons et protégeons vos données personnelles.',
+  keywords: 'confidentialité, privacy, RGPD, données personnelles, protection',
+  openGraph: {
+    title: 'Politique de Confidentialité - Flex Tournaments',
+    description: 'Notre politique de confidentialité et protection des données',
+    url: 'https://flex-tournaments.com/confidentialite',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://flex-tournaments.com/confidentialite',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
 export default function ConfidentialitePage() {
   return (
     <div className="min-h-screen flex flex-col">

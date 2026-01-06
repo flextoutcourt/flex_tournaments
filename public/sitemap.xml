@@ -6,40 +6,88 @@
 
   <!-- Home Page -->
   <url>
-    <loc>https://flex-tournaments.com/</loc>
-    <lastmod>2025-11-05</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>/</loc>
+    <lastmod>2026-01-06</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Tournaments List -->
   <url>
-    <loc>https://flex-tournaments.com/tournaments</loc>
-    <lastmod>2025-11-05</lastmod>
+    <loc>/tournaments</loc>
+    <lastmod>2026-01-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- Create Tournament -->
   <url>
-    <loc>https://flex-tournaments.com/tournaments/create</loc>
-    <lastmod>2025-11-05</lastmod>
+    <loc>/tournaments/create</loc>
+    <lastmod>2026-01-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Documentation -->
+  <url>
+    <loc>/documentation</loc>
+    <lastmod>2026-01-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
+  <!-- Support -->
+  <url>
+    <loc>/support</loc>
+    <lastmod>2026-01-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Status -->
+  <url>
+    <loc>/status</loc>
+    <lastmod>2026-01-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Terms of Service -->
+  <url>
+    <loc>/conditions</loc>
+    <lastmod>2026-01-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Privacy Policy -->
+  <url>
+    <loc>/confidentialite</loc>
+    <lastmod>2026-01-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- Cookie Policy -->
+  <url>
+    <loc>/cookies</loc>
+    <lastmod>2026-01-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
   <!-- Sign In -->
   <url>
-    <loc>https://flex-tournaments.com/auth/signin</loc>
-    <lastmod>2025-11-05</lastmod>
+    <loc>/auth/signin</loc>
+    <lastmod>2026-01-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Sign Up -->
   <url>
-    <loc>https://flex-tournaments.com/auth/signup</loc>
-    <lastmod>2025-11-05</lastmod>
+    <loc>/auth/signup</loc>
+    <lastmod>2026-01-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
