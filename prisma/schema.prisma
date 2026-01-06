@@ -24,6 +24,7 @@ model User {
   updatedAt    DateTime      @updatedAt
   tournaments  Tournament[] // Tournois créés par l'utilisateur
   ActivityLog  ActivityLog[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 enum UserRole {
@@ -108,4 +109,19 @@ model ActivityLog {
   @@index([entityType])
   @@index([entityId])
   @@index([createdAt])
+}
+
+// Password reset token for secure password resets
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  @@index([token])
+  @@index([expiresAt])
 }
