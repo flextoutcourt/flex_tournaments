@@ -78,7 +78,7 @@ export default async function TournamentPage({
                         </span>
                       </h1>
                       {tournament.description && (
-                        <p className="text-base md:text-lg text-gray-300 max-w-3xl leading-relaxed">{tournament.description}</p>
+                        <p className="text-base md:text-lg text-gray-300 max-w-3xl leading-relaxed whitespace-pre-line">{tournament.description}</p>
                       )}
                     </div>
                   </div>
