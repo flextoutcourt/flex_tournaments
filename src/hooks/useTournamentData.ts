@@ -1,7 +1,7 @@
 // app/tournament/[id]/live/hooks/useTournamentData.ts
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Item, TournamentData } from '../types';
+import { Item } from '../types';
 import { getYouTubeVideoId } from '../utils/youtubeUtils';
 
 export function useTournamentData() {

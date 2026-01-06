@@ -212,7 +212,7 @@ export default function TournamentItemsList({ items, tournamentId, status, twoCa
 function ItemCard({ 
   item, 
   originalIndex, 
-  tournamentId, 
+  tournamentId: _tournamentId, 
   status, 
   deletingItemId, 
   onDelete,

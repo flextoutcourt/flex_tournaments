@@ -9,7 +9,7 @@ interface VoteBarProps {
   registerBarRef?: (itemId: 'item1' | 'item2', ref: React.RefObject<HTMLDivElement>) => void;
 }
 
-const VoteBar: React.FC<VoteBarProps> = ({ votedUsers, number, item1Score, item2Score, registerBarRef }) => {
+const VoteBar: React.FC<VoteBarProps> = ({ votedUsers: _votedUsers, number, item1Score, item2Score, registerBarRef }) => {
   const barRef = useRef<HTMLDivElement>(null);
   const itemId = (`item${number}` as 'item1' | 'item2');
 

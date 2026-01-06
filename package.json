@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "npx ts-node --project tsconfig.json prisma/seed.ts"
   },
   "dependencies": {
     "@firecms/neat": "^0.4.0",

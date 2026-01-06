@@ -28,7 +28,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   onMouseEnterPlayer,
   onMouseLeavePlayer,
   playerId,
-  colorClass,
+  colorClass: _colorClass,
   buttonGradient,
   votedUsers,
   number,

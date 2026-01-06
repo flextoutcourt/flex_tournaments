@@ -17,13 +17,19 @@ export const authConfig: NextAuthConfig = {
           return null;
         }
 
-        // Use AuthService for authentication
-        const user = await AuthService.authenticateUser(
-          credentials.email as string,
-          credentials.password as string
-        );
+        try {
+          // Use AuthService for authentication
+          const user = await AuthService.authenticateUser(
+            credentials.email as string,
+            credentials.password as string
+          );
 
-        return user;
+          return user;
+        } catch (error) {
+          // AuthService throws error for banned users, but we've already checked this on client
+          // If somehow a banned user gets here, deny login
+          return null;
+        }
       },
     }),
   ],

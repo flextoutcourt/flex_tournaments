@@ -5,6 +5,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FaSignInAlt, FaEnvelope, FaLock, FaExclamationTriangle } from 'react-icons/fa';
+import BanModal from '@/components/Auth/BanModal';
 
 function SignInForm() {
   const router = useRouter();
@@ -15,6 +16,8 @@ function SignInForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banReason, setBanReason] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +25,24 @@ function SignInForm() {
     setIsLoading(true);
 
     try {
+      // First check if email is banned
+      const banCheckRes = await fetch('/api/auth/check-ban', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const banCheckData = await banCheckRes.json();
+
+      if (banCheckData.banned) {
+        setBanReason(banCheckData.reason);
+        setShowBanModal(true);
+        setEmail('');
+        setPassword('');
+        setIsLoading(false);
+        return;
+      }
+
       const result = await signIn('credentials', {
         email,
         password,
@@ -30,7 +51,7 @@ function SignInForm() {
 
       if (result?.error) {
         setError('Email ou mot de passe incorrect');
-      } else {
+      } else if (result?.ok) {
         router.push(callbackUrl);
         router.refresh();
       }
@@ -39,6 +60,11 @@ function SignInForm() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCloseBanModal = () => {
+    setShowBanModal(false);
+    setBanReason('');
   };
 
   return (
@@ -137,6 +163,13 @@ function SignInForm() {
             </div>
         </div>
       </div>
+
+      {/* Ban Modal */}
+      <BanModal
+        isOpen={showBanModal}
+        banReason={banReason}
+        onClose={handleCloseBanModal}
+      />
     </div>
   );
 }

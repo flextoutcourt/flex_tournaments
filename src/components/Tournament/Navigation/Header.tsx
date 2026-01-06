@@ -11,7 +11,7 @@ interface TournamentHeaderProps {
   generalError: string | null; // Pour afficher les erreurs générales sous le header
 }
 
-const TournamentHeader: React.FC<TournamentHeaderProps> = ({ title, liveTwitchChannel, isTmiConnected, tmiError, generalError }) => {
+const TournamentHeader: React.FC<TournamentHeaderProps> = ({ title: _title, liveTwitchChannel, isTmiConnected, tmiError, generalError }) => {
   const displayError = generalError || tmiError;
 
   return (

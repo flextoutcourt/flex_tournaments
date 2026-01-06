@@ -1,0 +1,2 @@
+-- This file is used to fix the migration history
+-- It won't actually run, it's just to help us understand the state

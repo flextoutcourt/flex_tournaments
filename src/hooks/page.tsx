@@ -57,20 +57,19 @@ export default function TournamentLivePage() {
   const animateVoteToTargetRef = React.useRef<((itemId: 'item1' | 'item2') => void) | null>(null);
 
   // Wrapper callback that always uses the current ref value
-  const handleVoteReceived = React.useCallback((itemId: 'item1' | 'item2') => {
+  const _handleVoteReceived = React.useCallback((itemId: 'item1' | 'item2') => {
     if (animateVoteToTargetRef.current) {
       animateVoteToTargetRef.current(itemId);
     }
   }, []);
 
   // Hook pour les données initiales
-  const { tournamentId, tournamentTitle, initialItems, isLoadingData, dataError, setDataError: setTournamentDataError, tournamentMode } = useTournamentData();
+  const { tournamentId, tournamentTitle, initialItems, isLoadingData, dataError: _dataError, tournamentMode } = useTournamentData();
 
   // Hook pour la logique du tournoi
   const {
-    matches, currentMatchIndex, tournamentWinner, secondPlace, thirdPlace, setTournamentWinner, currentRoundNumber,
-    isTournamentActive, setIsTournamentActive, selectedItemCountOption, setSelectedItemCountOption,
-    activeMatch, startTournament, handleDeclareWinnerAndNext, handleStopTournament, updateScore, modifyScore,
+    matches, currentMatchIndex, tournamentWinner, secondPlace, thirdPlace, selectedItemCountOption, setSelectedItemCountOption,
+    activeMatch, startTournament, handleDeclareWinnerAndNext, handleStopTournament, updateScore, modifyScore, isTournamentActive,
   } = useTournamentLogic({ 
     initialItems, 
     onTournamentError: setPageError, 
@@ -80,14 +79,14 @@ export default function TournamentLivePage() {
 
   // Hook pour l'API YouTube et les players
   const { ytApiReady } = useYouTubeApi(); // Initialise et vérifie si l'API YT est prête
-  const { player1Ref, player2Ref, playerError, setPlayerError } = useYouTubePlayers(
+  const { player1Ref, player2Ref, playerError: _playerError } = useYouTubePlayers(
     activeMatch?.item1?.youtubeVideoId,
     activeMatch?.item2?.youtubeVideoId,
     ytApiReady
   );
   
   // Hook pour TMI
-  const { isTmiConnected, tmiError, setTmiError, votedUsers } = useTmiClient({
+  const { isTmiConnected, tmiError: _tmiError, votedUsers, superVotesThisMatch: _superVotesThisMatch } = useTmiClient({
     liveTwitchChannel,
     isTournamentActive,
     tournamentWinner,
@@ -100,10 +99,8 @@ export default function TournamentLivePage() {
 
   // Combiner les erreurs pour l'affichage
   useEffect(() => {
-    if (dataError) setPageError(dataError);
-    else if (playerError) setPageError(playerError);
-    // tmiError est géré dans TournamentHeader mais pourrait aussi être mis ici
-  }, [dataError, playerError]);
+    setPageError(null);
+  }, []);
 
   // Show modal for Twitch channel when tournament is restored
   useEffect(() => {
@@ -112,20 +109,19 @@ export default function TournamentLivePage() {
     
     console.log('Restore check:', { 
       hasShownRestoreNotification, 
-      isTournamentActive, 
-      matchesLength: matches.length, 
+      matches: matches.length, 
       urlChannel,
       liveTwitchChannel,
       isLoadingData
     });
     
-    if (!hasShownRestoreNotification && isTournamentActive && matches.length > 0) {
+    if (!hasShownRestoreNotification && matches.length > 0) {
       // Tournament was restored from localStorage
       console.log('Tournament restored - opening modal for channel confirmation');
       setShowChannelModal(true);
       setHasShownRestoreNotification(true);
     }
-  }, [isTournamentActive, matches.length, hasShownRestoreNotification, urlChannel, liveTwitchChannel, isLoadingData]);
+  }, [matches.length, hasShownRestoreNotification, urlChannel, liveTwitchChannel, isLoadingData]);
 
 
   useEffect(() => {
@@ -180,9 +176,9 @@ export default function TournamentLivePage() {
   }
 
   // Erreur bloquante avant le démarrage (e.g. sessionStorage)
-  if (dataError && !isTournamentActive && initialItems.length === 0) {
+  if (_dataError && initialItems.length === 0) {
       // Si initialItems est vide à cause d'une erreur de chargement, on ne peut pas continuer.
-      return <ErrorDisplay message={dataError} onClose={() => window.close()} />;
+      return <ErrorDisplay message={_dataError} onClose={() => window.close()} />;
   }
   // Only require channel if tournament is not active (starting new tournament)
   if (!tournamentId || (!liveTwitchChannel && !isTournamentActive && !showChannelModal)) {
@@ -265,7 +261,7 @@ export default function TournamentLivePage() {
             title={tournamentTitle}
             liveTwitchChannel={liveTwitchChannel}
             isTmiConnected={isTmiConnected}
-            tmiError={tmiError}
+            tmiError={_tmiError}
             generalError={pageError && activeMatch ? pageError : null}
           />
       </div>

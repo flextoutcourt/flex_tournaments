@@ -2,12 +2,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { FaPlus, FaYoutube, FaFont, FaExclamationTriangle, FaSearch } from 'react-icons/fa';
-import { useRouter } from 'next/navigation';
-
+import { useRouter } from 'next/navigation';import Image from 'next/image';
 // Interface pour les résultats de recherche YouTube (similaire à l'exemple précédent)
 interface YouTubeSearchResult {
   id: string;
@@ -245,7 +244,7 @@ export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode =
                 >
                   <div className="relative flex-shrink-0 mr-4">
                     <div className="absolute inset-0 bg-purple-500/20 rounded-lg blur-md opacity-0 group-hover/result:opacity-100 transition-opacity duration-300"></div>
-                    <img src={result.thumbnail} alt={result.title} width="100" className="relative rounded-lg aspect-video object-cover shadow-lg" />
+                    <Image src={result.thumbnail} alt={result.title} width={100} height={56} className="relative rounded-lg aspect-video object-cover shadow-lg" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-white truncate mb-1 group-hover/result:text-purple-300 transition-colors" title={result.title}>{result.title}</p>
@@ -284,7 +283,7 @@ export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode =
                 {(categories || []).map((category, index) => {
                   const isSelected = watch('category') === category;
                   const isFirstCategory = index === 0;
-                  const accentColor = isFirstCategory ? 'blue' : 'pink';
+                  const _accentColor = isFirstCategory ? 'blue' : 'pink';
                   const hoverColor = isFirstCategory ? 'from-blue-600/40 to-blue-500/30' : 'from-pink-600/40 to-pink-500/30';
                   const borderColor = isFirstCategory ? 'border-blue-500/50' : 'border-pink-500/50';
                   const selectedBg = isFirstCategory ? 'from-blue-600/50 to-blue-500/40 border-blue-400' : 'from-pink-600/50 to-pink-500/40 border-pink-400';

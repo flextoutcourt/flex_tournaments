@@ -1,9 +1,8 @@
 // app/tournament/[id]/live/hooks/useTmiClient.ts
-import { useState, useEffect, useCallback, useRef } from 'react'; // Ajout de useRef
+import { useState, useEffect, useRef } from 'react';
 import tmi from 'tmi.js';
 import { CurrentMatch } from '../types';
 import { VOTE_KEYWORDS_ITEM1, VOTE_KEYWORDS_ITEM2 } from '../constants';
-import { generateKeywords } from '@/utils/tournamentHelper';
 import toast from "react-hot-toast"
 
 interface UseTmiClientProps {
@@ -78,7 +77,7 @@ export function useTmiClient({
       channels: [liveTwitchChannel],
     });
 
-    client.on('connected', (address, port) => {
+    client.on('connected', (_address, _port) => {
       setIsTmiConnected(true);
       setTmiError(null);
       console.log(`TMI.js: Connecté à ${liveTwitchChannel}`);
@@ -104,7 +103,7 @@ export function useTmiClient({
       setTmiClient(null);
       setIsTmiConnected(false);
     };
-  }, [isTournamentActive, liveTwitchChannel, tournamentWinner]);
+  }, [tmiClient, isTournamentActive, liveTwitchChannel, tournamentWinner]);
 
   useEffect(() => {
     // Ce hook attache/détache le gestionnaire de messages.
@@ -299,7 +298,7 @@ export function useTmiClient({
         console.log(`TMI.js: Écouteur de messages désactivé (Match ID était: ${matchIdentifier}).`);
       }
     };
-  }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, onModifyScore, onVoteReceived, matchIdentifier]); // Ajout de matchIdentifier, onModifyScore et onVoteReceived
+  }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, onModifyScore, onVoteReceived, matchIdentifier]);
 
   return { tmiClient, isTmiConnected, tmiError, setTmiError, votedUsers, superVotesThisMatch };
 }

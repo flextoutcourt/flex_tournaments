@@ -101,7 +101,7 @@ export default function TournamentsPage() {
       {/* Tournaments Grid */}
       {!isLoading && !error && tournaments && tournaments.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tournaments.map((tournament, index) => (
+          {tournaments.map((tournament, _index) => (
             <div 
               key={tournament.id} 
               className="group relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 hover:border-indigo-500 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-indigo-500/20 transition-all duration-300"

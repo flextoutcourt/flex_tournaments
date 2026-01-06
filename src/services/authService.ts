@@ -111,6 +111,7 @@ export class AuthService {
   /**
    * Authenticate a user with email and password
    * @returns User object if credentials are valid, null otherwise
+   * @throws Error if user is banned (with specific message format)
    */
   static async authenticateUser(email: string, password: string) {
     try {
@@ -118,6 +119,11 @@ export class AuthService {
       
       if (!user || !user.password) {
         return null;
+      }
+
+      // Check if user is banned - throw specific error that can be caught by NextAuth
+      if (user.banned) {
+        throw new Error('BANNED|' + (user.bannedReason || 'Non spécifiée'));
       }
 
       const isPasswordValid = await this.comparePassword(password, user.password);
@@ -134,6 +140,10 @@ export class AuthService {
         role: user.role,
       };
     } catch (error) {
+      // If it's a ban error, throw it as-is so NextAuth can handle it
+      if (error instanceof Error && error.message.startsWith('BANNED|')) {
+        throw error;
+      }
       throw new DatabaseError('Erreur lors de l\'authentification', error);
     }
   }

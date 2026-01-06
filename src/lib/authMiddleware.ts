@@ -28,12 +28,12 @@ export async function requireAuth(): Promise<AuthSession> {
 }
 
 /**
- * Require admin role - throws AuthorizationError if not admin
+ * Require superadmin role - throws AuthorizationError if not superadmin
  */
 export async function requireAdmin(): Promise<AuthSession> {
   const session = await requireAuth();
   
-  if (session.user.role !== 'ADMIN') {
+  if (session.user.role !== 'SUPERADMIN') {
     throw new AuthorizationError(
       "Vous devez être administrateur pour effectuer cette action."
     );

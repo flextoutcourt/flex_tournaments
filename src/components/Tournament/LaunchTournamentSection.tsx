@@ -1,7 +1,6 @@
 // components/LaunchTournamentSection.tsx
 'use client';
 
-import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import { FaRocket, FaTwitch, FaExclamationTriangle, FaSpinner, FaExternalLinkAlt, FaUsers } from 'react-icons/fa';
 // tmi.js n'est plus initialisé ici, mais sur la nouvelle page "live"
@@ -31,7 +30,6 @@ export default function LaunchTournamentSection({ tournamentId, tournamentTitle,
   const [isLoadingItems, setIsLoadingItems] = useState(false);
   const [fetchItemsError, setFetchItemsError] = useState<string | null>(null);
   const [hasSavedState, setHasSavedState] = useState(false);
-  const [savedTwitchChannel, setSavedTwitchChannel] = useState<string | null>(null);
 
   // Check for saved tournament state
   useEffect(() => {
@@ -45,7 +43,6 @@ export default function LaunchTournamentSection({ tournamentId, tournamentTitle,
             // Try to get the saved twitch channel from sessionStorage
             const sessionData = sessionStorage.getItem(`tournamentData_${tournamentId}`);
             if (sessionData) {
-              const data = JSON.parse(sessionData);
               // Extract channel from URL or stored data if available
               // For now, we'll just show the resume button without pre-filling the channel
             }

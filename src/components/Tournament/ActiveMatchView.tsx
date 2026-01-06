@@ -4,8 +4,6 @@ import { motion } from 'framer-motion';
 import { CurrentMatch } from '@/types';
 import { cardVariants } from '@/animationVariants';
 import ParticipantCard from './TournamentItem';
-import { generateKeywords } from '@/utils/tournamentHelper';
-import { useTmiClient } from '@/hooks/useTmiClient';
 import VoteAnimationLayer from '@/components/Shared/VoteAnimationLayer';
 import { useVoteAnimation } from '@/hooks/useVoteAnimation';
 
