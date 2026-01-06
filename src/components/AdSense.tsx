@@ -8,6 +8,12 @@ interface AdSenseProps {
   className?: string;
 }
 
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
+
 export function AdSense({ 
   format = 'auto', 
   style, 
@@ -15,8 +21,8 @@ export function AdSense({
 }: AdSenseProps) {
   useEffect(() => {
     try {
-      if (typeof window !== 'undefined') {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      if (typeof window !== 'undefined' && window.adsbygoogle) {
+        window.adsbygoogle.push({});
       }
     } catch (err) {
       console.log('AdSense error:', err);
