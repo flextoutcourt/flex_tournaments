@@ -28,14 +28,6 @@ export async function PATCH(
       );
     }
 
-    // Check if user is the creator
-    if (tournament.createdById !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Vous n\'êtes pas autorisé à publier ce tournoi' },
-        { status: 403 }
-      );
-    }
-
     // Check if tournament is already published
     if (tournament.status === 'LIVE') {
       return NextResponse.json(
