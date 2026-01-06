@@ -2,6 +2,7 @@
 
 // app/layout.tsx
 import Link from 'next/link';
+import Image from 'next/image';
 import { Providers } from '@/components/Providers';
 import UserMenu from '@/components/UserMenu';
 
@@ -62,10 +63,8 @@ export default function RootLayout({
         <link rel="alternate" hrefLang="fr" href="https://flex-tournaments.com/" />
         
         {/* Favicon */}
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" href="/logo.png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
         <link rel="manifest" href="/site.webmanifest" />
         
         {/* Sitemap and Feeds */}
@@ -104,8 +103,15 @@ export default function RootLayout({
               <div className="flex items-center justify-between h-16">
                 {/* Logo */}
                 <Link href="/" className="flex items-center space-x-3 group">
-                  <div className="bg-indigo-600 p-2 rounded-lg group-hover:bg-indigo-500 transition-colors">
-                    <span className="text-xl">🏆</span>
+                  <div className="relative w-10 h-10 rounded-lg overflow-hidden group-hover:shadow-lg group-hover:shadow-indigo-500/50 transition-all duration-300">
+                    <Image
+                      src="/logo.png"
+                      alt="Flex Tournaments"
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                      priority
+                    />
                   </div>
                   <span className="text-xl font-bold text-white hidden sm:block">
                     Flex Tournaments

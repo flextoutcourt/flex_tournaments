@@ -6,7 +6,7 @@
 
   <!-- Home Page -->
   <url>
-    <loc>/</loc>
+    <loc>https://tournaments.flex-central.com/</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -14,7 +14,7 @@
 
   <!-- Tournaments List -->
   <url>
-    <loc>/tournaments</loc>
+    <loc>https://tournaments.flex-central.com/tournaments</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -22,7 +22,7 @@
 
   <!-- Create Tournament -->
   <url>
-    <loc>/tournaments/create</loc>
+    <loc>https://tournaments.flex-central.com/tournaments/create</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -30,7 +30,7 @@
 
   <!-- Documentation -->
   <url>
-    <loc>/documentation</loc>
+    <loc>https://tournaments.flex-central.com/documentation</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -38,7 +38,7 @@
 
   <!-- Support -->
   <url>
-    <loc>/support</loc>
+    <loc>https://tournaments.flex-central.com/support</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -46,7 +46,7 @@
 
   <!-- Status -->
   <url>
-    <loc>/status</loc>
+    <loc>https://tournaments.flex-central.com/status</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -54,7 +54,7 @@
 
   <!-- Terms of Service -->
   <url>
-    <loc>/conditions</loc>
+    <loc>https://tournaments.flex-central.com/conditions</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
@@ -62,7 +62,7 @@
 
   <!-- Privacy Policy -->
   <url>
-    <loc>/confidentialite</loc>
+    <loc>https://tournaments.flex-central.com/confidentialite</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
@@ -70,7 +70,7 @@
 
   <!-- Cookie Policy -->
   <url>
-    <loc>/cookies</loc>
+    <loc>https://tournaments.flex-central.com/cookies</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
@@ -78,7 +78,7 @@
 
   <!-- Sign In -->
   <url>
-    <loc>/auth/signin</loc>
+    <loc>https://tournaments.flex-central.com/auth/signin</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -86,7 +86,7 @@
 
   <!-- Sign Up -->
   <url>
-    <loc>/auth/signup</loc>
+    <loc>https://tournaments.flex-central.com/auth/signup</loc>
     <lastmod>2026-01-06</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
