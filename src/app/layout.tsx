@@ -115,6 +115,13 @@ export default function RootLayout({
             gtag('config', 'G-VVHZN6EHWN');`,
           }}
         />
+
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9027732959517119"
+          crossOrigin="anonymous"
+        ></script>
       </head>
       <body className="bg-slate-900 text-gray-100 min-h-screen flex flex-col antialiased">
         {/* Google Tag Manager (noscript) */}

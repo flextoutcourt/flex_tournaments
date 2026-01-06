@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { FaChevronRight, FaCalendarAlt, FaUsers, FaTrophy } from 'react-icons/fa';
 import { FaSprayCanSparkles } from 'react-icons/fa6';
 import { useMouseHalo } from '@/hooks/useMouseHalo';
+import { AdSense } from '@/components/AdSense';
 
 interface Stats {
   tournaments: number;
@@ -311,6 +312,9 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* Google AdSense Banner */}
+        <AdSense className="my-12" />
       </section>
     </div>
   );
