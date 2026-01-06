@@ -14,6 +14,7 @@ interface UseTmiClientProps {
   onScoreUpdate: (matchIndex: number, itemKey: 'item1' | 'item2') => void;
   onModifyScore: (matchIndex: number, itemKey: 'item1' | 'item2', amount: number) => void;
   onVoteReceived?: (itemKey: 'item1' | 'item2') => void;
+  tournamentId?: string | null; // Add tournament ID for vote recording
 }
 
 export function useTmiClient({
@@ -24,7 +25,8 @@ export function useTmiClient({
   currentMatchIndex,
   onScoreUpdate,
   onModifyScore,
-  onVoteReceived
+  onVoteReceived,
+  tournamentId
 }: UseTmiClientProps) {
   const [tmiClient, setTmiClient] = useState<tmi.Client | null>(null);
   const [isTmiConnected, setIsTmiConnected] = useState(false);
@@ -33,6 +35,32 @@ export function useTmiClient({
   const votedUsers = useRef(new Set<{username: string;votedItem: string}>());
   const superVoteUsers = useRef(new Set<string>()); // Track users who have used their super vote for the entire tournament
   const superVotesThisMatch = useRef(new Set<string>()); // Track which users used super vote in current match only
+
+  // Function to record vote to database
+  const recordVoteToDatabase = async (itemId: string) => {
+    if (!tournamentId) {
+      console.warn('[Vote Recording] No tournamentId provided');
+      return;
+    }
+    
+    try {
+      console.log('[Vote Recording] Recording vote:', { itemId, tournamentId });
+      const response = await fetch('/api/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, tournamentId })
+      });
+      
+      const data = await response.json();
+      console.log('[Vote Recording] Response:', data);
+      
+      if (!response.ok) {
+        console.error('[Vote Recording] Error:', data);
+      }
+    } catch (error) {
+      console.error('[Vote Recording] Network error:', error);
+    }
+  };
 
   // Créer un identifiant stable pour le match actuel
   // Cet identifiant ne changera que si les participants ou le round/match changent réellement.
@@ -211,6 +239,7 @@ export function useTmiClient({
 
       if (item1VoteKeywords.some(keyword => messageLower == keyword)) {
         votedItem = 'item1';
+        recordVoteToDatabase(activeMatch.item1.id);
         toast(`${username} à voté pour ${item1Name}`,
           {
             icon: '1️',
@@ -224,6 +253,7 @@ export function useTmiClient({
         );
       } else if (item2VoteKeywords.some(keyword => messageLower == keyword)) {
         votedItem = 'item2';
+        recordVoteToDatabase(activeMatch.item2.id);
         toast(`${username} à voté pour ${item2Name}`,
           {
             icon: '2️⃣',
@@ -244,6 +274,11 @@ export function useTmiClient({
 
         votedItem = messageLower === 'super 1' ? 'item1' : 'item2';
         const itemName = votedItem === 'item1' ? item1Name : item2Name;
+        const itemId = votedItem === 'item1' ? activeMatch.item1.id : activeMatch.item2.id;
+        
+        // Record super vote twice to database
+        recordVoteToDatabase(itemId);
+        recordVoteToDatabase(itemId);
         
         // Mark user as having used their super vote tournament-wide
         superVoteUsers.current.add(username);

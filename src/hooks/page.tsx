@@ -95,6 +95,7 @@ export default function TournamentLivePage() {
     onScoreUpdate: updateScore,
     onModifyScore: modifyScore,
     onVoteReceived: animateVoteToTargetRef.current || undefined,
+    tournamentId,
   });
 
   // Combiner les erreurs pour l'affichage

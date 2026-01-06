@@ -1,15 +1,43 @@
 // app/page.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-// Remplacement de Heroicons par react-icons
-// Vous devrez peut-être ajuster les importations spécifiques en fonction des sets d'icônes que vous préférez.
-// J'utilise ici Font Awesome (Fa) comme exemple principal.
 import { FaChevronRight, FaCalendarAlt, FaUsers, FaTrophy } from 'react-icons/fa';
 import { FaSprayCanSparkles } from 'react-icons/fa6';
+import { useMouseHalo } from '@/hooks/useMouseHalo';
+
+interface Stats {
+  tournaments: number;
+  votes: string;
+  support: string;
+}
 
 export default function HomePage() {
+  const heroRef = useMouseHalo('rgba(99, 102, 241, 0.15)');
+  const [stats, setStats] = useState<Stats>({
+    tournaments: 1000,
+    votes: 'N/A',
+    support: '24/7'
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center">
-      {/* Hero Section - COMPACT & STUNNING */}
+      {/* Hero Section - MODERN & CLEAN */}
       <header className="my-6 md:my-8 w-full relative">
         {/* Floating particles background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -18,10 +46,13 @@ export default function HomePage() {
           <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-ping" style={{ animationDuration: '3.5s', animationDelay: '2s' }}></div>
         </div>
 
-        <div className="group/hero bg-gradient-to-br from-slate-800 via-slate-800 to-slate-900 border-2 border-indigo-500/20 hover:border-indigo-500/40 p-8 md:p-12 rounded-2xl relative overflow-hidden shadow-2xl transition-all duration-500">
-          {/* Animated gradient orbs */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div ref={heroRef} className="bg-slate-800/70 border-2 border-slate-700/60 hover:border-slate-700 p-8 md:p-12 rounded-2xl relative overflow-hidden shadow-2xl transition-all duration-500 backdrop-blur-sm">
+          {/* Halo Effect */}
+          <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+          
+          {/* Animated particles */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           
           {/* Grid pattern overlay */}
           <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
@@ -40,7 +71,7 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-purple-500 rounded-full blur-xl opacity-30 animate-pulse" style={{ animationDelay: '1s' }}></div>
                 
                 {/* Icon container with 3D effect */}
-                <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 p-5 rounded-full shadow-2xl transform transition-all duration-500 group-hover/trophy:scale-110 group-hover/trophy:rotate-12">
+                <div className="relative bg-indigo-600 p-5 rounded-full shadow-2xl transform transition-all duration-500 group-hover/trophy:scale-110 group-hover/trophy:rotate-12">
                   <FaTrophy className="h-12 w-12 text-yellow-300 drop-shadow-2xl animate-bounce" style={{ animationDuration: '2s' }} />
                 </div>
                 
@@ -51,12 +82,12 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Compact Title with gradient text effect */}
+            {/* Compact Title */}
             <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-4 animate-fadeIn">
               <span className="inline-block text-white drop-shadow-2xl hover:scale-105 transition-transform duration-300 cursor-default">
                 Flex
               </span>{' '}
-              <span className="inline-block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-2xl hover:scale-105 transition-transform duration-300 cursor-default animate-pulse" style={{ animationDuration: '3s' }}>
+              <span className="inline-block text-indigo-400 drop-shadow-2xl hover:scale-105 transition-transform duration-300 cursor-default">
                 Tournaments
               </span>
             </h1>
@@ -64,7 +95,7 @@ export default function HomePage() {
             {/* Compact badge/tagline */}
             <div className="relative inline-block mb-5 animate-fadeIn" style={{ animationDelay: '0.2s' }}>
               <div className="absolute inset-0 bg-indigo-500/20 blur-lg rounded-full"></div>
-              <div className="relative bg-gradient-to-r from-indigo-600/80 via-purple-600/80 to-pink-600/80 px-5 py-2.5 rounded-full border-2 border-indigo-400/50 shadow-xl backdrop-blur-sm">
+              <div className="relative bg-slate-700/60 px-5 py-2.5 rounded-full border-2 border-slate-600/50 shadow-xl backdrop-blur-sm">
                 <p className="text-base md:text-xl font-black text-white flex items-center gap-2">
                   <span className="animate-bounce text-lg" style={{ animationDuration: '1s' }}>🎉</span>
                   <span>Votre communauté décide. Vous célébrez.</span>
@@ -84,46 +115,27 @@ export default function HomePage() {
             </p>
 
             {/* Compact CTA Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4 animate-fadeIn" style={{ animationDelay: '0.6s' }}>
-              <div className="relative">
-                <Link
-                  href="/tournaments/create"
-                  className="group/btn relative inline-flex items-center justify-center px-8 py-4 text-lg font-black text-white rounded-xl overflow-hidden shadow-2xl transition-all duration-500 hover:scale-105 hover:shadow-indigo-500/50"
-                >
-                  {/* Animated gradient background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 animate-pulse"></div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
-                  
-                  {/* Sliding shine effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent transform -skew-x-12 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000"></div>
-                  
-                  {/* Ripple effect on hover */}
-                  <div className="absolute inset-0 rounded-xl border-4 border-white/50 scale-100 group-hover/btn:scale-110 opacity-0 group-hover/btn:opacity-100 transition-all duration-500"></div>
-                  
-                  <FaSprayCanSparkles className="relative h-5 w-5 mr-2.5 transition-transform duration-500 group-hover/btn:rotate-180 group-hover/btn:scale-110" />
-                  <span className="relative">Créer un Tournoi</span>
-                </Link>
-                {/* NEW Badge outside the link to avoid overflow clipping */}
-                <div className="absolute -right-1.5 -top-1.5 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-[10px] font-black text-slate-900 animate-bounce shadow-lg pointer-events-none p-4">
-                  NEW
-                </div>
-              </div>
-              
+            <div className="mt-10 flex flex-col sm:flex-row justify-center items-center gap-5 animate-fadeIn" style={{ animationDelay: '0.6s' }}>
+              {/* Primary Button */}
+              <Link
+                href="/tournaments/create"
+                className="px-10 py-4 text-lg font-black text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                Créer un Tournoi
+              </Link>
+
+              {/* Secondary Button */}
               <Link
                 href="/tournaments"
-                className="group/btn2 relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white bg-slate-700/50 hover:bg-slate-600/50 rounded-xl border-2 border-indigo-500/30 hover:border-indigo-400 backdrop-blur-sm transition-all duration-500 hover:scale-105 shadow-xl hover:shadow-indigo-500/30"
+                className="px-10 py-4 text-lg font-bold text-white bg-slate-700 hover:bg-slate-600 rounded-lg border-2 border-slate-600 hover:border-indigo-400 shadow-lg transition-all duration-300 hover:scale-105"
               >
-                <span>Découvrir</span>
-                <FaChevronRight className="h-5 w-5 ml-2.5 transition-all duration-500 group-hover/btn2:translate-x-2 group-hover/btn2:scale-110" />
-                
-                {/* Animated border glow */}
-                <div className="absolute inset-0 rounded-xl border-2 border-indigo-400/0 group-hover/btn2:border-indigo-400/50 transition-all duration-500"></div>
+                Découvrir
               </Link>
             </div>
 
             {/* Compact Stats Cards with stagger animation */}
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <div className="group/card relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-indigo-900/50 hover:to-slate-900/80 p-6 rounded-xl border-2 border-slate-600/50 hover:border-indigo-400 backdrop-blur-sm transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-xl hover:shadow-indigo-500/30 animate-fadeIn" style={{ animationDelay: '0.8s' }}>
+              <div className="group/card relative bg-slate-700/40 hover:bg-slate-700/60 p-6 rounded-xl border-2 border-slate-600/30 hover:border-indigo-400/50 backdrop-blur-sm transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-indigo-500/20 animate-fadeIn" style={{ animationDelay: '0.8s' }}>
                 {/* Glow effect */}
                 <div className="absolute inset-0 bg-indigo-500/0 group-hover/card:bg-indigo-500/10 rounded-xl blur-lg transition-all duration-500"></div>
                 
@@ -136,7 +148,7 @@ export default function HomePage() {
                 <p className="text-gray-200 font-semibold text-sm group-hover/card:text-white transition-colors">Tournois illimités</p>
               </div>
 
-              <div className="group/card relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-yellow-900/30 hover:to-slate-900/80 p-6 rounded-xl border-2 border-slate-600/50 hover:border-yellow-400 backdrop-blur-sm transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-xl hover:shadow-yellow-500/30 animate-fadeIn" style={{ animationDelay: '1s' }}>
+              <div className="group/card relative bg-slate-700/40 hover:bg-slate-700/60 p-6 rounded-xl border-2 border-slate-600/30 hover:border-yellow-400/50 backdrop-blur-sm transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-yellow-500/20 animate-fadeIn" style={{ animationDelay: '1s' }}>
                 {/* Glow effect */}
                 <div className="absolute inset-0 bg-yellow-500/0 group-hover/card:bg-yellow-500/10 rounded-xl blur-lg transition-all duration-500"></div>
                 
@@ -149,7 +161,7 @@ export default function HomePage() {
                 <p className="text-gray-200 font-semibold text-sm group-hover/card:text-white transition-colors">Votes en temps réel</p>
               </div>
 
-              <div className="group/card relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 hover:from-purple-900/50 hover:to-slate-900/80 p-6 rounded-xl border-2 border-slate-600/50 hover:border-purple-400 backdrop-blur-sm transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-xl hover:shadow-purple-500/30 animate-fadeIn" style={{ animationDelay: '1.2s' }}>
+              <div className="group/card relative bg-slate-700/40 hover:bg-slate-700/60 p-6 rounded-xl border-2 border-slate-600/30 hover:border-purple-400/50 backdrop-blur-sm transition-all duration-500 transform hover:scale-105 hover:-translate-y-2 shadow-xl hover:shadow-purple-500/20 animate-fadeIn" style={{ animationDelay: '1.2s' }}>
                 {/* Glow effect */}
                 <div className="absolute inset-0 bg-purple-500/0 group-hover/card:bg-purple-500/10 rounded-xl blur-lg transition-all duration-500"></div>
                 
@@ -222,23 +234,81 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="w-full py-16 md:py-20 mt-12">
-        <div className="bg-slate-800 border border-slate-700 p-12 md:p-16 rounded-xl">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Prêt à lancer votre <span className="text-indigo-400">premier tournoi</span> ?
-            </h2>
-            <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto">
-              Rejoignez les streamers qui utilisent Flex Tournaments pour créer des moments inoubliables avec leur communauté.
-            </p>
-            <Link
-              href="/tournaments/create"
-              className="group inline-flex items-center justify-center px-12 py-6 text-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all duration-200 hover:scale-105"
-            >
-              <FaSprayCanSparkles className="h-7 w-7 mr-3 transition-transform duration-300 group-hover:rotate-12" />
-              <span>Commencer Maintenant</span>
-            </Link>
+      {/* CTA Section - MINIMAL & POWERFUL */}
+      <section className="w-full py-20 md:py-28 mt-16">
+        <div className="max-w-5xl mx-auto px-4">
+          {/* Minimal Hero CTA */}
+          <div className="relative">
+            {/* Soft glow background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/20 to-purple-600/10 rounded-3xl blur-3xl"></div>
+            
+            <div className="relative bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 p-16 md:p-20 rounded-3xl">
+              {/* Accent line */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent rounded-full"></div>
+
+              <div className="text-center">
+                {/* Eyebrow */}
+                <p className="text-indigo-300 font-semibold text-sm mb-4 tracking-widest uppercase">Commencez dès maintenant</p>
+
+                {/* Main Headline */}
+                <h2 className="text-6xl md:text-7xl font-black mb-6 text-white leading-tight">
+                  Créez un tournoi<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">en 30 secondes</span>
+                </h2>
+
+                {/* Subheading */}
+                <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-12 leading-relaxed">
+                  Pas de setup compliqué. Pas de configurations. Lancez simplement votre tournoi et laissez votre communauté voter en direct.
+                </p>
+
+                {/* Single Powerful CTA */}
+                <Link
+                  href="/tournaments/create"
+                  className="group relative inline-flex items-center justify-center px-12 py-6 text-2xl font-black text-white"
+                >
+                  {/* Animated background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300 group-hover:blur-2xl"></div>
+                  
+                  {/* Button content */}
+                  <div className="relative flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1 shadow-2xl">
+                    <FaSprayCanSparkles className="h-7 w-7 transition-transform duration-300 group-hover:rotate-180 group-hover:scale-125" />
+                    <span>Lancer un Tournoi</span>
+                    <FaChevronRight className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-2" />
+                  </div>
+                </Link>
+
+                {/* Quick Stats */}
+                <div className="mt-16 pt-12 border-t border-slate-700/50 grid grid-cols-3 gap-8">
+                  <div className="group cursor-default">
+                    <p className="text-4xl font-black text-indigo-400 mb-2 group-hover:scale-110 transition-transform relative inline-block">
+                      {stats.tournaments}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap border border-indigo-400/30 shadow-lg">
+                        A vous de faire monter les chiffres
+                      </div>
+                    </p>
+                    <p className="text-gray-400 font-semibold text-sm">Tournois actifs</p>
+                  </div>
+                  <div className="group cursor-default">
+                    <p className="text-4xl font-black text-purple-400 mb-2 group-hover:scale-110 transition-transform relative inline-block">
+                      {stats.votes}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 text-purple-300 text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap border border-purple-400/30 shadow-lg">
+                        J'ai pas fait les comptes encore
+                      </div>
+                    </p>
+                    <p className="text-gray-400 font-semibold text-sm">Votes</p>
+                  </div>
+                  <div className="group cursor-default">
+                    <p className="text-4xl font-black text-pink-400 mb-2 group-hover:scale-110 transition-transform relative inline-block">
+                      {stats.support}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-slate-900 text-pink-300 text-xs font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap border border-pink-400/30 shadow-lg">
+                        Seulement quand flex dors pas (😴)
+                      </div>
+                    </p>
+                    <p className="text-gray-400 font-semibold text-sm">Support en direct</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

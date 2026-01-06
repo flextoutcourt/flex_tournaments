@@ -125,3 +125,14 @@ model PasswordResetToken {
   @@index([token])
   @@index([expiresAt])
 }
+
+// Modèle pour les votes
+model Vote {
+  id        String   @id @default(cuid())
+  itemId    String   // ID de l'item voté
+  tournamentId String // ID du tournoi
+  createdAt DateTime @default(now())
+  
+  @@index([tournamentId])
+  @@index([createdAt])
+}

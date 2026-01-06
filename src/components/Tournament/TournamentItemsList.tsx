@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { FaYoutube, FaTrash, FaEdit, FaSearch, FaTimes } from 'react-icons/fa';
 import { useRouter } from 'next/navigation'; // Pour rafraîchir après suppression
 import { useState, useMemo } from 'react';
+import { useMouseHalo } from '@/hooks/useMouseHalo';
 
 interface TournamentItemsListProps {
   items: Item[];
@@ -21,6 +22,8 @@ export default function TournamentItemsList({ items, tournamentId, status, twoCa
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>(categories?.[0] || 'all');
+  
+  const cardRef = useMouseHalo('rgba(168, 85, 247, 0.6)');
 
   // Filter items based on search query
   const filteredItems = useMemo(() => {

@@ -131,42 +131,104 @@ export default function RootLayout({
             {children}
           </main>
 
-          {/* Modern Footer */}
-          <footer className="bg-slate-800 border-t border-slate-700 mt-auto">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                {/* Footer Logo */}
-                <div className="flex items-center space-x-3">
-                  <div className="bg-indigo-600 p-2 rounded-lg">
-                    <span className="text-lg">🏆</span>
+          {/* Modern Premium Footer */}
+          <footer className="bg-slate-900/80 border-t border-slate-700/50 backdrop-blur-sm mt-auto">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+              {/* Top Section - Main Footer Content */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-slate-700/50">
+                {/* Brand Column */}
+                <div className="col-span-1">
+                  <div className="inline-flex items-center gap-3 mb-4">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-indigo-600 rounded-lg blur-lg opacity-50"></div>
+                      <div className="relative bg-indigo-600 p-2.5 rounded-lg">
+                        <span className="text-xl">🏆</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-base font-black text-white">Flex</p>
+                      <p className="text-xs text-gray-400">Tournaments</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">Flex Tournaments</p>
-                    <p className="text-xs text-gray-400">Powered by Next.js & Prisma</p>
-                  </div>
+                  <p className="text-sm text-gray-400 leading-relaxed">
+                    Créez des tournois interactifs avec votes Twitch en temps réel.
+                  </p>
                 </div>
 
-                {/* Footer Links */}
-                <div className="flex items-center space-x-6 text-sm">
-                  <Link href="/" className="text-gray-400 hover:text-indigo-400 transition-colors">
-                    Accueil
-                  </Link>
-                  <Link href="/tournaments" className="text-gray-400 hover:text-indigo-400 transition-colors">
-                    Tournois
-                  </Link>
-                  <Link href="/tournaments/create" className="text-gray-400 hover:text-indigo-400 transition-colors">
-                    Créer
-                  </Link>
+                {/* Navigation Column */}
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-4">Navigation</h4>
+                  <ul className="space-y-2.5">
+                    <li>
+                      <Link href="/" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Accueil
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/tournaments" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Découvrir
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/tournaments/create" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Créer un Tournoi
+                      </Link>
+                    </li>
+                  </ul>
                 </div>
 
-                {/* Copyright */}
-                <div className="text-center md:text-right">
-                  <p className="text-sm text-gray-400">
-                    &copy; {new Date().getFullYear()} <span className="text-indigo-400 font-semibold">Flex</span>
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Tous droits réservés
-                  </p>
+                {/* Ressources Column */}
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-4">Ressources</h4>
+                  <ul className="space-y-2.5">
+                    <li>
+                      <Link href="/documentation" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Documentation
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/support" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Support
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/status" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Status
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Legal Column */}
+                <div>
+                  <h4 className="text-sm font-bold text-white mb-4">Légal</h4>
+                  <ul className="space-y-2.5">
+                    <li>
+                      <Link href="/conditions" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Conditions
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/confidentialite" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Confidentialité
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/cookies" className="text-gray-400 hover:text-indigo-400 transition-colors text-sm font-medium">
+                        Cookies
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Bottom Section - Copyright & Attribution */}
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+                <p>
+                  &copy; {new Date().getFullYear()} <span className="text-indigo-400 font-bold">Flex Tournaments</span>. Tous droits réservés.
+                </p>
+                <div className="flex items-center gap-4">
+                  <p className="text-xs">Fait avec <span className="text-red-400">❤</span> par Flex</p>
                 </div>
               </div>
             </div>

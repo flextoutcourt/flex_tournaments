@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FaRocket, FaTwitch, FaExclamationTriangle, FaSpinner, FaExternalLinkAlt, FaUsers } from 'react-icons/fa';
+import { useMouseHalo } from '@/hooks/useMouseHalo';
 // tmi.js n'est plus initialisé ici, mais sur la nouvelle page "live"
 
 // Interface pour un item (correspondant à ce que l'API retourne)
@@ -30,8 +31,9 @@ export default function LaunchTournamentSection({ tournamentId, tournamentTitle,
   const [isLoadingItems, setIsLoadingItems] = useState(false);
   const [fetchItemsError, setFetchItemsError] = useState<string | null>(null);
   const [hasSavedState, setHasSavedState] = useState(false);
-
-  // Check for saved tournament state
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  const cardRef = useMouseHalo('rgba(34, 197, 94, 0.13)');  // Check for saved tournament state
   useEffect(() => {
     if (tournamentId) {
       try {
@@ -72,6 +74,7 @@ export default function LaunchTournamentSection({ tournamentId, tournamentTitle,
           console.error("Erreur fetchItems:", err);
         } finally {
           setIsLoadingItems(false);
+          setIsLoaded(true);
         }
       };
       fetchItems();
@@ -160,7 +163,10 @@ export default function LaunchTournamentSection({ tournamentId, tournamentTitle,
   // Le composant n'affiche plus l'état "lancé" lui-même,
   // il se contente d'ouvrir la nouvelle page.
   return (
-    <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-green-500/30 hover:border-green-500/50 rounded-2xl p-6 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group">
+    <div ref={cardRef} className={`bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-green-500/30 hover:border-green-500/50 rounded-2xl p-6 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group ${isLoaded ? 'animate-fadeIn' : 'opacity-0'}`}>
+      {/* Mouse Halo Effect */}
+      <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+      
       {/* Background effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-600/10 rounded-full blur-2xl group-hover:bg-green-600/20 transition-all duration-700"></div>
       <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl group-hover:bg-emerald-600/20 transition-all duration-700"></div>

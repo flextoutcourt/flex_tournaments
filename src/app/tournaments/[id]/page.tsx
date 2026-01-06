@@ -6,6 +6,7 @@ import { FaEdit, FaListUl, FaRocket, FaShareSquare, FaExclamationCircle, FaTroph
 import { auth } from '@/lib/auth';
 import AddItemForm from '@/components/Forms/Tournament/AddItemForm';
 import TournamentItemsList from '@/components/Tournament/TournamentItemsList';
+import ParticipantsSection from '@/components/Tournament/ParticipantsSection';
 import LaunchTournamentSection from '@/components/Tournament/LaunchTournamentSection';
 import PublishTournamentButton from '@/components/Tournament/PublishTournamentButton';
 import TournamentFooter from '@/components/Tournament/TournamentFooter';
@@ -41,9 +42,9 @@ export default async function TournamentPage({
   const isAuthenticated = !!session;
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative">
       {/* Background effects */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
@@ -51,10 +52,10 @@ export default async function TournamentPage({
       <div className="container mx-auto p-4 md:p-8 relative z-10">
         {/* Hero Header Section */}
         <header className="mb-8 md:mb-12 animate-fadeIn">
-          <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-indigo-500/20 hover:border-indigo-500/40 p-6 md:p-10 rounded-2xl backdrop-blur-sm shadow-2xl transition-all duration-500 relative overflow-hidden group">
+          <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-indigo-500/20 hover:border-indigo-500/40 p-6 md:p-10 rounded-2xl backdrop-blur-sm shadow-2xl transition-all duration-500 relative group animate-borderGlow">
             {/* Animated gradient orbs */}
-            <div className="absolute -top-20 -right-20 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl group-hover:bg-indigo-600/30 transition-all duration-700"></div>
-            <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl group-hover:bg-purple-600/30 transition-all duration-700"></div>
+            <div className="absolute -top-20 -right-20 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl group-hover:bg-indigo-600/30 transition-all duration-700 animate-pulse"></div>
+            <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl group-hover:bg-purple-600/30 transition-all duration-700 animate-pulse" style={{ animationDelay: '1s' }}></div>
             
             {/* Grid pattern overlay */}
             <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(90deg, #6366f1 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
@@ -64,7 +65,7 @@ export default async function TournamentPage({
                 <div className="flex-1">
                   <div className="flex items-start gap-4 mb-4">
                     {/* Trophy icon with glow */}
-                    <div className="relative">
+                    <div className="relative animate-floatSmooth">
                       <div className="absolute inset-0 bg-indigo-500 rounded-full blur-xl opacity-50 animate-pulse"></div>
                       <div className="relative bg-gradient-to-br from-indigo-600 to-purple-600 p-4 rounded-2xl shadow-2xl">
                         <FaTrophy className="h-8 w-8 text-yellow-300 drop-shadow-2xl" />
@@ -85,11 +86,11 @@ export default async function TournamentPage({
                   
                   {/* Meta information */}
                   <div className="flex flex-wrap gap-4 text-sm text-gray-400">
-                    <div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-lg backdrop-blur-sm hover:bg-slate-700/70 transition-all duration-300 transform hover:scale-105">
                       <FaClock className="text-indigo-400" />
                       <span>Créé le {new Date(tournament.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     </div>
-                    <div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+                    <div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1.5 rounded-lg backdrop-blur-sm hover:bg-slate-700/70 transition-all duration-300 transform hover:scale-105">
                       <FaUsers className="text-purple-400" />
                       <span>{tournament.Items.length} participant{tournament.Items.length > 1 ? 's' : ''}</span>
                     </div>
@@ -174,49 +175,13 @@ export default async function TournamentPage({
             )}
             
             {/* Participants List Section */}
-            <section className="animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-              <div className="bg-gradient-to-br from-slate-800/50 via-slate-800/50 to-slate-900/50 border-2 border-purple-500/20 hover:border-purple-500/40 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group">
-                {/* Background effects */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-600/10 rounded-full blur-2xl group-hover:bg-purple-600/20 transition-all duration-700"></div>
-                
-                <div className="relative z-10">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 flex items-center gap-3">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-purple-500 rounded-lg blur-md opacity-50"></div>
-                      <div className="relative bg-gradient-to-br from-purple-600 to-indigo-600 p-3 rounded-lg">
-                        <FaListUl className="text-white" />
-                      </div>
-                    </div>
-                    <span className="bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
-                      Participants
-                    </span>
-                    <span className="text-lg font-normal text-gray-400">({tournament.Items.length})</span>
-                  </h2>
-                  
-                  {tournament.Items.length > 0 ? (
-                    <TournamentItemsList 
-                      items={tournament.Items} 
-                      tournamentId={tournament.id} 
-                      status={tournament.status}
-                      twoCategoryMode={tournament.mode === 'TWO_CATEGORY'}
-                      categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA || '', tournament.categoryB || ''].filter(Boolean) : null}
-                    />
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600/20 to-indigo-600/20 rounded-full mb-4">
-                        <FaUsers className="h-10 w-10 text-purple-400" />
-                      </div>
-                      <p className="text-gray-300 text-lg font-medium mb-2">
-                        Aucun participant pour le moment
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        {tournament.status === 'SETUP' && "Utilisez le formulaire ci-dessus pour ajouter vos premiers participants."}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
+            <ParticipantsSection
+              items={tournament.Items}
+              tournamentId={tournament.id}
+              status={tournament.status}
+              twoCategoryMode={tournament.mode === 'TWO_CATEGORY'}
+              categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA || '', tournament.categoryB || ''].filter(Boolean) : null}
+            />
           </div>
 
           {/* Sidebar Column - Tournament Actions */}

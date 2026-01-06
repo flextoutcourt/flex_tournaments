@@ -103,6 +103,7 @@ export default function TournamentLivePage() {
     onScoreUpdate: updateScore,
     onModifyScore: modifyScore,
     onVoteReceived: handleVoteReceived,
+    tournamentId,
   });
 
   // Combiner les erreurs pour l'affichage
