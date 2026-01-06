@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flex Tournaments - Site en Maintenance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e2e8f0;
+        }
+
+        .maintenance-container {
+            text-align: center;
+            padding: 40px 20px;
+            max-width: 600px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 20px;
+            box-shadow: 0 20px 25px rgba(79, 70, 229, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 20px 25px rgba(79, 70, 229, 0.3);
+            }
+            50% {
+                box-shadow: 0 20px 25px rgba(79, 70, 229, 0.6);
+            }
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #a1a5fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-weight: 900;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 20px;
+            color: #cbd5e1;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .status {
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 10px 0;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f97316;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .status-text {
+            font-size: 16px;
+            color: #fbbf24;
+        }
+
+        .message {
+            background: rgba(148, 163, 184, 0.1);
+            border-left: 4px solid #4f46e5;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 40px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #cbd5e1;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #4f46e5;
+            border: 2px solid #4f46e5;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .footer a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 32px;
+            }
+
+            .subtitle {
+                font-size: 18px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="maintenance-container">
+        <div class="logo">
+            <div class="logo-icon">🏆</div>
+            <div class="logo-text">Flex Tournaments</div>
+        </div>
+
+        <h1>Site en Maintenance</h1>
+        
+        <p class="subtitle">
+            Nous améliorons la plateforme pour vous offrir la meilleure expérience possible.
+        </p>
+
+        <div class="status">
+            <div class="status-item">
+                <div class="status-dot"></div>
+                <span class="status-text">Maintenance en cours...</span>
+            </div>
+            <div class="status-item">
+                <span style="color: #94a3b8;">Nous serons de retour très bientôt</span>
+            </div>
+        </div>
+
+        <div class="message">
+            <strong>Qu'est-ce qui se passe?</strong><br>
+            Nous effectuons une maintenance programmée pour améliorer les performances, ajouter de nouvelles fonctionnalités et renforcer la sécurité de Flex Tournaments.
+            <br><br>
+            <strong>Quand revient-on?</strong><br>
+            Nous prévoyons une remise en ligne dans les prochaines heures. Merci de votre patience! ⏰
+        </div>
+
+        <div class="cta-buttons">
+            <button class="btn btn-primary" onclick="location.reload()">
+                Vérifier la disponibilité
+            </button>
+            <a href="mailto:support@flex-central.com" class="btn btn-secondary">
+                Nous contacter
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>Flex Tournaments © 2026 • <a href="/status">État du système</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh toutes les 30 secondes
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
