@@ -60,6 +60,35 @@
             }
         }
 
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 10px rgba(79, 70, 229, 0.5), 0 0 20px rgba(124, 58, 237, 0.3);
+            }
+            50% {
+                text-shadow: 0 0 20px rgba(79, 70, 229, 0.8), 0 0 40px rgba(124, 58, 237, 0.6);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
@@ -69,7 +98,8 @@
             justify-content: center;
             color: #e2e8f0;
             position: relative;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
         /* Floating particles background */
@@ -191,11 +221,12 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-top: 16px;
+            animation: glow 3s ease-in-out infinite;
         }
 
         h1 {
             font-size: 48px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             font-weight: 900;
             background: linear-gradient(135deg, #ffffff 0%, #818cf8 100%);
             -webkit-background-clip: text;
@@ -213,12 +244,18 @@
         }
 
         .status-card {
-            background: rgba(79, 70, 229, 0.1);
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%);
             border: 1px solid rgba(79, 70, 229, 0.3);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 40px;
             backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.15);
+            animation: slideInLeft 0.8s ease-out;
         }
 
         .status-dot {
@@ -226,27 +263,33 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: #f97316;
+            background: #ec4899;
             margin-right: 10px;
-            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 10px #ec4899, 0 0 20px rgba(236, 72, 153, 0.5);
         }
 
         .status-text {
             font-size: 16px;
-            color: #fbbf24;
+            color: #e2e8f0;
             font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .message-box {
-            background: rgba(148, 163, 184, 0.05);
-            border-left: 4px solid #4f46e5;
-            border-radius: 8px;
-            padding: 24px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
+            border: 2px solid;
+            border-image: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) 1;
+            border-radius: 12px;
+            padding: 28px;
             text-align: left;
             margin-bottom: 40px;
             font-size: 15px;
             line-height: 1.8;
             color: #cbd5e1;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 1s ease-out;
         }
 
         .message-box strong {
@@ -258,6 +301,57 @@
 
         .message-box p {
             margin-bottom: 12px;
+        }
+
+        .maintenance-list {
+            list-style: none;
+            margin: 16px 0;
+        }
+
+        .maintenance-list li {
+            padding: 14px 18px;
+            margin: 12px 0;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(124, 58, 237, 0.08) 100%);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-left: 4px solid #4f46e5;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .maintenance-list li::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite;
+        }
+
+        .maintenance-list li:hover {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.25) 0%, rgba(124, 58, 237, 0.15) 100%);
+            transform: translateX(6px);
+            border-color: rgba(79, 70, 229, 0.6);
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.2);
+        }
+
+        .maintenance-list li::before {
+            content: '⚡';
+            font-weight: bold;
+            color: #818cf8;
+            font-size: 18px;
+            min-width: 28px;
+            text-align: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .maintenance-list li span {
+            color: #e2e8f0;
+            font-weight: 500;
         }
 
         .cta-buttons {
@@ -278,31 +372,53 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: translateX(-100%);
+        }
+
+        .btn:hover::before {
+            animation: shimmer 0.5s ease-in;
         }
 
         .btn-primary {
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             color: white;
-            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3), 0 0 20px rgba(79, 70, 229, 0.2);
             border: 1px solid rgba(79, 70, 229, 0.5);
         }
 
         .btn-primary:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 45px rgba(79, 70, 229, 0.6);
+            box-shadow: 0 20px 40px rgba(79, 70, 229, 0.5), 0 0 30px rgba(124, 58, 237, 0.4);
             border-color: rgba(79, 70, 229, 0.8);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
             background: transparent;
-            color: #4f46e5;
-            border: 2px solid #4f46e5;
+            color: #818cf8;
+            border: 2px solid #818cf8;
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.2);
         }
 
         .btn-secondary:hover {
-            background: rgba(79, 70, 229, 0.15);
-            border-color: #818cf8;
-            color: #818cf8;
+            background: rgba(129, 140, 248, 0.15);
+            border-color: #c7d2fe;
+            color: #c7d2fe;
+            box-shadow: 0 0 25px rgba(129, 140, 248, 0.4);
+            transform: translateY(-2px);
         }
 
         .footer {
@@ -314,13 +430,16 @@
         }
 
         .footer a {
-            color: #4f46e5;
+            color: #818cf8;
             text-decoration: none;
-            transition: color 0.3s;
+            transition: all 0.3s;
+            font-weight: 500;
         }
 
         .footer a:hover {
-            color: #818cf8;
+            color: #c7d2fe;
+            text-shadow: 0 0 10px rgba(129, 140, 248, 0.4);
+        }
         }
 
         @media (max-width: 640px) {
@@ -393,14 +512,19 @@
 
         <!-- Message Box -->
         <div class="message-box">
-            <p>
-                <strong>Qu'est-ce qui se passe?</strong>
-                Nous effectuons une maintenance programmée pour améliorer les performances, ajouter de nouvelles fonctionnalités et renforcer la sécurité de Flex Tournaments.
+            <strong>Qu'est-ce qui se passe?</strong>
+            <ul class="maintenance-list">
+                <li><span>Amélioration des performances</span></li>
+                <li><span>Nouvelles fonctionnalités en cours d'intégration</span></li>
+                <li><span>Renforcement de la sécurité</span></li>
+                <li><span>Optimisation de la base de données</span></li>
+            </ul>
+            <p style="margin-top: 20px; font-size: 14px; color: #94a3b8;">
+                Ou peut-être que j'ai cassé quelque chose en déployant... 🙃 Revenir dans quelques minutes!
             </p>
-            <p>
-                <strong>Quand revient-on?</strong>
-                Nous prévoyons une remise en ligne dans les prochaines heures. Merci de votre patience! ⏰
-            </p>
+            
+            <strong style="display: block; margin-top: 24px; margin-bottom: 12px;">Quand revient-on?</strong>
+            <p>Nous prévoyons une remise en ligne dans les prochaines heures. Merci de votre patience! ⏰</p>
         </div>
 
         <!-- CTA Buttons -->
