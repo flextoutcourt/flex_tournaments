@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { logActivity, getIpFromRequest, getUserAgentFromRequest } from '@/services/logService';
 
 interface ItemCreateRequest {
   name?: string;
@@ -115,6 +116,28 @@ export async function POST(request: NextRequest) {
         category: body.category ? body.category.trim() : null,
         tournamentId,
       },
+    });
+
+    // Log the activity
+    await logActivity({
+      userId: session.user?.id,
+      action: 'item_created',
+      description: `Participant "${itemName}" ajouté au tournoi`,
+      entityType: 'item',
+      entityId: newItem.id,
+      ipAddress: getIpFromRequest(request),
+      userAgent: getUserAgentFromRequest(request),
+    });
+
+    // Also log at tournament level
+    await logActivity({
+      userId: session.user?.id,
+      action: 'tournament_item_added',
+      description: `Participant "${itemName}" ajouté`,
+      entityType: 'tournament',
+      entityId: tournamentId,
+      ipAddress: getIpFromRequest(request),
+      userAgent: getUserAgentFromRequest(request),
     });
 
     return NextResponse.json(newItem, { status: 201 });

@@ -5,8 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { FaPlus, FaYoutube, FaFont, FaExclamationTriangle, FaSearch } from 'react-icons/fa';
-import { useRouter } from 'next/navigation';import Image from 'next/image';
+import { FaPlus, FaYoutube, FaFont, FaExclamationTriangle, FaSearch, FaLock } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 // Interface pour les résultats de recherche YouTube (similaire à l'exemple précédent)
 interface YouTubeSearchResult {
   id: string;
@@ -41,9 +42,10 @@ interface AddItemFormProps {
   itemCount: number;
   twoCategoryMode?: boolean;
   categories?: string[] | null;
+  tournamentStatus?: 'SETUP' | 'LIVE';
 }
 
-export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode = false, categories = null }: AddItemFormProps) {
+export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode = false, categories = null, tournamentStatus = 'SETUP' }: AddItemFormProps) {
   const [isSubmittingToServer, setIsSubmittingToServer] = useState(false); // Renommé pour clarté
   const [serverError, setServerError] = useState<string | null>(null);
   const router = useRouter();
@@ -157,7 +159,19 @@ export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode =
   }, [currentYoutubeUrl, searchError]);
 
   return (
-    <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-indigo-500/30 hover:border-indigo-500/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group">
+    <>
+      {tournamentStatus === 'LIVE' ? (
+        <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-red-500/30 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl">
+          <div className="text-center py-8">
+            <FaLock className="h-12 w-12 text-red-400 mx-auto mb-4" />
+            <h3 className="text-2xl font-bold text-red-400 mb-2">Tournoi Publié</h3>
+            <p className="text-gray-300">
+              Les participants ne peuvent plus être ajoutés après la publication du tournoi.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-indigo-500/30 hover:border-indigo-500/50 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group">
       {/* Background effects */}
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-600/10 rounded-full blur-2xl group-hover:bg-indigo-600/20 transition-all duration-700"></div>
       <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-600/10 rounded-full blur-2xl group-hover:bg-purple-600/20 transition-all duration-700"></div>
@@ -375,6 +389,8 @@ export default function AddItemForm({ tournamentId, itemCount, twoCategoryMode =
           </div>
         </form>
       </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

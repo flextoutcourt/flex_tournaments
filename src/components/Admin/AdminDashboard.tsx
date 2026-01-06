@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaBan, FaCheck, FaSearch, FaExclamationCircle } from 'react-icons/fa';
+import { useTracking } from '@/hooks/useTracking';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaBan, FaCheck, FaSearch, FaExclamationCircle, FaHistory } from 'react-icons/fa';
 
 interface User {
   id: string;
@@ -26,6 +27,7 @@ interface FormData {
 export function AdminDashboard() {
   const { status } = useSession();
   const router = useRouter();
+  const { track } = useTracking();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +49,11 @@ export function AdminDashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
+    } else if (status === 'authenticated') {
+      // Track admin panel view
+      track('admin_panel_view');
     }
-  }, [status, router]);
+  }, [status, router, track]);
 
   // Fetch users
   useEffect(() => {
@@ -304,6 +309,13 @@ export function AdminDashboard() {
             <FaPlus className="text-lg" />
             <span>{editingUser ? 'Modifier' : 'Créer'} un utilisateur</span>
           </button>
+          <a
+            href="/admin/logs"
+            className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
+            <FaHistory className="text-lg" />
+            <span>Journaux d'activité</span>
+          </a>
         </div>
 
         {/* Content */}

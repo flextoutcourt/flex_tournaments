@@ -103,7 +103,7 @@ export function useTmiClient({
       setTmiClient(null);
       setIsTmiConnected(false);
     };
-  }, [tmiClient, isTournamentActive, liveTwitchChannel, tournamentWinner]);
+  }, [isTournamentActive, liveTwitchChannel, tournamentWinner]);
 
   useEffect(() => {
     // Ce hook attache/détache le gestionnaire de messages.

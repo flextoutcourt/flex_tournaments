@@ -13,16 +13,17 @@ datasource db {
 
 // Modèle pour les utilisateurs
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String    // Hashed password
-  role          UserRole  @default(USER)
-  banned        Boolean   @default(false)
-  bannedReason  String?   // Reason for banning
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  tournaments   Tournament[] // Tournois créés par l'utilisateur
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  password     String // Hashed password
+  role         UserRole      @default(USER)
+  banned       Boolean       @default(false)
+  bannedReason String? // Reason for banning
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  tournaments  Tournament[] // Tournois créés par l'utilisateur
+  ActivityLog  ActivityLog[]
 }
 
 enum UserRole {
@@ -34,21 +35,21 @@ enum UserRole {
 
 // Modèle pour les Tournois
 model Tournament {
-  id             String   @id @default(cuid())
-  title           String   @unique // Le nom du tournoi devrait être unique pour une meilleure identification
-  description    String?  // Description optionnelle du tournoi
-  status         Status @default(SETUP)   // Statut du tournoi (ex: "en cours", "terminé", etc.)
+  id          String   @id @default(cuid())
+  title       String   @unique // Le nom du tournoi devrait être unique pour une meilleure identification
+  description String? // Description optionnelle du tournoi
+  status      Status   @default(SETUP) // Statut du tournoi (ex: "en cours", "terminé", etc.)
   // Mode du tournoi: STANDARD (classique) ou TWO_CATEGORY (deux catégories opposées)
-  mode           Mode     @default(STANDARD)
+  mode        Mode     @default(STANDARD)
   // Catégories utilisées uniquement si mode == TWO_CATEGORY
-  categoryA      String?
-  categoryB      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  createdById    String?  // ID de l'utilisateur qui a créé le tournoi (optionnel pour les anciens tournois)
-  createdBy      User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
-  Items          Item[]   // Liste des items participant à ce tournoi
-  
+  categoryA   String?
+  categoryB   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String? // ID de l'utilisateur qui a créé le tournoi (optionnel pour les anciens tournois)
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  Items       Item[] // Liste des items participant à ce tournoi
+
   @@index([createdById])
 }
 
@@ -64,15 +65,47 @@ enum Mode {
 
 // Modèle pour les Items (participants du tournoi)
 model Item {
-  id             String   @id @default(cuid())
-  name           String   // Nom de l'item
-  category       String?  // Catégorie (ex: "FR", "US") pour les tournois à deux catégories
-  youtubeUrl     String?  // Lien vers la vidéo YouTube de l'item (optionnel)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id         String   @id @default(cuid())
+  name       String // Nom de l'item
+  category   String? // Catégorie (ex: "FR", "US") pour les tournois à deux catégories
+  youtubeUrl String? // Lien vers la vidéo YouTube de l'item (optionnel)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  tournamentId   String
-  tournament     Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // Si un tournoi est supprimé, ses items le sont aussi
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // Si un tournoi est supprimé, ses items le sont aussi
 
   @@index([tournamentId]) // Index pour optimiser les requêtes sur le tournoi
+}
+
+// Modèle pour le cache des résultats de recherche YouTube
+model YoutubeSearchCache {
+  id        String   @id @default(cuid())
+  query     String // Terme de recherche
+  results   Json // Résultats de recherche (stockés en JSON)
+  createdAt DateTime @default(now())
+  expiresAt DateTime // Date d'expiration du cache
+
+  @@index([query]) // Index sur la requête pour des recherches rapides
+  @@index([expiresAt]) // Index sur l'expiration pour nettoyer facilement
+}
+
+// Modèle pour les logs d'activité (audit trail)
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String? // ID de l'utilisateur (peut être null pour les actions anonymes)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String // Type d'action (ex: "item_created", "tournament_published", etc.)
+  description String? // Description détaillée de l'action
+  entityType  String? // Type d'entité affectée (ex: "tournament", "item")
+  entityId    String? // ID de l'entité affectée
+  ipAddress   String? // Adresse IP de l'utilisateur
+  userAgent   String? // User agent du navigateur
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
 }

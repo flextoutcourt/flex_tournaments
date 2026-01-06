@@ -7,6 +7,8 @@ import { auth } from '@/lib/auth';
 import AddItemForm from '@/components/Forms/Tournament/AddItemForm';
 import TournamentItemsList from '@/components/Tournament/TournamentItemsList';
 import LaunchTournamentSection from '@/components/Tournament/LaunchTournamentSection';
+import PublishTournamentButton from '@/components/Tournament/PublishTournamentButton';
+import TournamentFooter from '@/components/Tournament/TournamentFooter';
 
 // Fonction pour récupérer les données du tournoi
 async function getTournament(id: string) {
@@ -36,8 +38,6 @@ export default async function TournamentPage({
   const tournament = await getTournament(id);
   const session = await auth();
 
-  // TODO: Add status field to Tournament model
-  const currentStatus: 'SETUP' | 'LIVE' | 'FINISHED' = 'SETUP';
   const isAuthenticated = !!session;
 
   return (
@@ -111,16 +111,16 @@ export default async function TournamentPage({
                   
                   {/* Status badge */}
                   <div className={`inline-flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-bold shadow-lg backdrop-blur-sm ${
-                    currentStatus === 'SETUP' ? 'bg-yellow-500/20 text-yellow-300 border-2 border-yellow-500/50' :
-                    currentStatus === 'LIVE' ? 'bg-green-500/20 text-green-300 border-2 border-green-500/50 animate-pulse' :
+                    tournament.status === 'SETUP' ? 'bg-yellow-500/20 text-yellow-300 border-2 border-yellow-500/50' :
+                    tournament.status === 'LIVE' ? 'bg-green-500/20 text-green-300 border-2 border-green-500/50 animate-pulse' :
                     'bg-gray-500/20 text-gray-300 border-2 border-gray-500/50'
                   }`}>
                     <div className={`w-2 h-2 rounded-full ${
-                      currentStatus === 'SETUP' ? 'bg-yellow-400' :
-                      currentStatus === 'LIVE' ? 'bg-green-400 animate-pulse' :
+                      tournament.status === 'SETUP' ? 'bg-yellow-400' :
+                      tournament.status === 'LIVE' ? 'bg-green-400 animate-pulse' :
                       'bg-gray-400'
                     }`}></div>
-                    {currentStatus.toUpperCase()}
+                    {tournament.status.toUpperCase()}
                   </div>
                 </div>
               </div>
@@ -133,14 +133,15 @@ export default async function TournamentPage({
           {/* Main Column - Items and Actions */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
             {/* Add Item Form Section - Only for authenticated users */}
-            {currentStatus === 'SETUP' && (
+            {tournament.status === 'SETUP' && (
               <div className="animate-fadeIn" style={{ animationDelay: '0.3s' }}>
                 {isAuthenticated ? (
                   <AddItemForm
                     tournamentId={tournament.id}
                     itemCount={tournament.Items.length}
                     twoCategoryMode={tournament.mode === 'TWO_CATEGORY'}
-                    categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA ?? '', tournament.categoryB ?? ''].filter(Boolean) : null}
+                    categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA || '', tournament.categoryB || ''].filter(Boolean) : null}
+                    tournamentStatus={tournament.status}
                   />
                 ) : (
                   <div className="bg-gradient-to-br from-slate-800/50 via-slate-800/50 to-slate-900/50 border-2 border-yellow-500/30 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl">
@@ -196,7 +197,7 @@ export default async function TournamentPage({
                     <TournamentItemsList 
                       items={tournament.Items} 
                       tournamentId={tournament.id} 
-                      status={currentStatus}
+                      status={tournament.status}
                       twoCategoryMode={tournament.mode === 'TWO_CATEGORY'}
                       categories={tournament.mode === 'TWO_CATEGORY' ? [tournament.categoryA || '', tournament.categoryB || ''].filter(Boolean) : null}
                     />
@@ -209,7 +210,7 @@ export default async function TournamentPage({
                         Aucun participant pour le moment
                       </p>
                       <p className="text-gray-400 text-sm">
-                        {currentStatus === 'SETUP' && "Utilisez le formulaire ci-dessus pour ajouter vos premiers participants."}
+                        {tournament.status === 'SETUP' && "Utilisez le formulaire ci-dessus pour ajouter vos premiers participants."}
                       </p>
                     </div>
                   )}
@@ -221,7 +222,7 @@ export default async function TournamentPage({
           {/* Sidebar Column - Tournament Actions */}
           <aside className="lg:col-span-1 space-y-6 animate-fadeIn" style={{ animationDelay: '0.5s' }}>
             {/* Publish Section */}
-            {currentStatus === 'SETUP' && tournament.Items.length >= 2 && (
+            {tournament.status === 'SETUP' && tournament.Items.length >= 2 && (
               <div className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-blue-500/30 hover:border-blue-500/50 rounded-2xl p-6 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group">
                 <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-600/10 rounded-full blur-2xl group-hover:bg-blue-600/20 transition-all duration-700"></div>
                 
@@ -235,20 +236,13 @@ export default async function TournamentPage({
                   <p className="text-sm text-gray-400 mb-5 leading-relaxed">
                     Une fois publié, vous ne pourrez plus ajouter ou supprimer des participants. Le tournoi sera prêt à être lancé.
                   </p>
-                  <button
-                    className="group/btn relative w-full inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-white rounded-xl overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-blue-500/50"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
-                    <span className="relative z-10">Publier Maintenant</span>
-                  </button>
+                  <PublishTournamentButton tournamentId={tournament.id} />
                 </div>
               </div>
             )}
 
             {/* Launch Tournament Section */}
-            {currentStatus === 'SETUP' && (
+            {tournament.status === 'LIVE' && (
               <LaunchTournamentSection 
                 tournamentId={tournament.id} 
                 tournamentTitle={tournament.title} 
@@ -266,18 +260,18 @@ export default async function TournamentPage({
                   <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
                     <FaRocket className="text-green-400 animate-bounce" />
                     <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                      Tournoi {currentStatus === 'LIVE' ? 'en Cours' : 'Terminé'}
+                      Tournoi {tournament.status === 'LIVE' ? 'en Cours' : 'Terminé'}
                     </span>
                   </h3>
                   <p className="text-sm text-gray-400">
-                    {currentStatus === 'LIVE' ? "Le tournoi est actuellement en direct !" : "Ce tournoi est terminé."}
+                    {tournament.status === 'LIVE' ? "Le tournoi est actuellement en direct !" : "Ce tournoi est terminé."}
                   </p>
                 </div>
               </div>
             )}
 
             {/* Warning - Not Enough Participants */}
-            {currentStatus === 'SETUP' && tournament.Items.length < 2 && (
+            {tournament.status === 'SETUP' && tournament.Items.length < 2 && (
               <div className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-orange-500/10 text-yellow-300 border-2 border-yellow-500/30 rounded-2xl p-5 backdrop-blur-sm shadow-xl flex items-start gap-4 animate-pulse" style={{ animationDuration: '2s' }}>
                 <div className="relative flex-shrink-0">
                   <div className="absolute inset-0 bg-yellow-500 rounded-full blur-md opacity-50"></div>
@@ -295,6 +289,9 @@ export default async function TournamentPage({
             )}
           </aside>
         </div>
+
+        {/* Tournament Footer with Legal Information */}
+        <TournamentFooter />
       </div>
     </div>
   );

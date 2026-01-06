@@ -132,7 +132,9 @@ export default function TournamentItemsList({ items, tournamentId, status, twoCa
               return (
                 <button
                   key={category}
-                  onClick={() => setActiveTab(category)}
+                  onClick={() => {
+                    setActiveTab(category);
+                  }}
                   className={`px-6 py-3 font-bold rounded-t-xl transition-all duration-300 flex items-center gap-2 border-b-4 ${
                     isActive
                       ? 'bg-gradient-to-r from-purple-600/40 to-indigo-600/40 border-purple-500 text-white'

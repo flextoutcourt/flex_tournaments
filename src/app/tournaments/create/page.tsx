@@ -81,7 +81,7 @@ export default function CreateTournamentPage() {
       // Réinitialiser le formulaire
       reset();
       // Rediriger vers la page du tournoi nouvellement créé (où l'on pourra ajouter des items)
-      router.push(`/tournaments/${newTournament.id}`); // Ajusté pour correspondre à la structure de route probable
+      router.push(`/tournaments/${newTournament.data.id}`); // API wraps response in { data: tournament }
 
     } catch (error: any) {
       setServerError(error.message || 'Une erreur inconnue est survenue.');
@@ -105,15 +105,15 @@ export default function CreateTournamentPage() {
     );
   }
 
-  // Redirect if not authenticated or not admin
-  if (!session || session.user?.role !== 'ADMIN') {
+  // Redirect if not authenticated
+  if (!session) {
     return (
       <div className="max-w-lg mx-auto p-4 md:p-8 bg-gray-800 rounded-xl shadow-2xl">
         <div className="text-center">
           <FaLock className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-red-400 mb-4">Accès Refusé</h1>
           <p className="text-gray-300 mb-6">
-            Vous devez être connecté en tant qu'administrateur pour créer un tournoi.
+            Vous devez être connecté pour créer un tournoi.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
