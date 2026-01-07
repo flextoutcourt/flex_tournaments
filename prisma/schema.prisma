@@ -25,6 +25,7 @@ model User {
   tournaments  Tournament[] // Tournois créés par l'utilisateur
   ActivityLog  ActivityLog[]
   passwordResetTokens PasswordResetToken[]
+  sessions     UserSession[] // Active user sessions
 }
 
 enum UserRole {
@@ -135,4 +136,31 @@ model Vote {
   
   @@index([tournamentId])
   @@index([createdAt])
+}
+
+// Modèle pour tracker les sessions utilisateurs actives (GDPR compliant)
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session tracking
+  sessionToken String   @unique // NextAuth session token
+  loginAt   DateTime @default(now())
+  lastActivity DateTime @updatedAt
+  expiresAt DateTime // When session expires
+  
+  // Device/Browser info
+  ipAddress String?
+  userAgent String?
+  
+  // Metadata
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expiresAt])
+  @@index([isActive])
 }
