@@ -1,3 +1,4 @@
+import React from "react";
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
@@ -24,7 +25,8 @@ const VoteBar: React.FC<VoteBarProps> = ({ votedUsers: _votedUsers, number, item
   // Calculate percent based on displayed scores
   const totalScore = item1Score + item2Score;
   const currentScore = number === 1 ? item1Score : item2Score;
-  const percent = totalScore > 0 ? Math.round((currentScore / totalScore) * 100) : 0;
+  const percentDecimal = totalScore > 0 ? (currentScore / totalScore) * 100 : 0;
+  const percentRounded = Math.round(percentDecimal * 100) / 100; // 2 decimal places
 
   return (
     <motion.div
@@ -38,7 +40,7 @@ const VoteBar: React.FC<VoteBarProps> = ({ votedUsers: _votedUsers, number, item
         className="absolute left-0 top-0 h-full bg-indigo-500 text-white text-center text-md origin-left"
         initial={{ width: "0%", scale: 1, boxShadow: "none" }}
         animate={{
-          width: `${percent}%`,
+          width: `${percentDecimal}%`,
           scale: [1, 1.05, 1],
           boxShadow: [
             "0 0 8px 2px rgba(99, 102, 241, 0.7)",
@@ -52,10 +54,10 @@ const VoteBar: React.FC<VoteBarProps> = ({ votedUsers: _votedUsers, number, item
           boxShadow: { duration: 0.6, ease: "easeInOut" },
         }}
       >
-        {percent}%
+        {percentRounded.toFixed(2)}%
       </motion.div>
     </motion.div>
   );
 };
 
-export default VoteBar;
+export default React.memo(VoteBar);

@@ -1,4 +1,8 @@
-// hooks/useTracking.ts
+/**
+ * useTracking Hook - Simple analytics tracking
+ * Thin wrapper around tracking library
+ */
+
 'use client';
 
 import { useCallback } from 'react';
@@ -17,3 +21,4 @@ export function useTracking() {
 
   return { track };
 }
+

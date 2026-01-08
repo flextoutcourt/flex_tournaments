@@ -1,13 +1,19 @@
-// app/tournament/[id]/live/hooks/useTournamentData.ts
+/**
+ * useTournamentData Hook - Load tournament data from sessionStorage
+ * Delegates to TournamentDataService for data loading
+ */
+
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Item } from '../types';
-import { getYouTubeVideoId } from '../utils/youtubeUtils';
+import { TournamentDataService } from '@/lib/services/tournamentDataService';
 
 export function useTournamentData() {
   const params = useParams();
   const tournamentId = typeof params.id === 'string' ? params.id : null;
-  
+
   const [tournamentTitle, setTournamentTitle] = useState<string | null>(null);
   const [initialItems, setInitialItems] = useState<Item[]>([]);
   const [tournamentMode, setTournamentMode] = useState<string | null>(null);
@@ -23,28 +29,29 @@ export function useTournamentData() {
     }
 
     try {
-      const storedData = sessionStorage.getItem(`tournamentData_${tournamentId}`);
-      if (!storedData) {
-        throw new Error("Données du tournoi non trouvées. Veuillez relancer depuis la page du tournoi.");
-      }
-      const data: any = JSON.parse(storedData);
-      if (!data.items || data.items.length < 2 || !data.title) {
-        throw new Error("Données du tournoi invalides ou participants insuffisants (minimum 2).");
-      }
+      const data = TournamentDataService.loadFromSession(tournamentId);
+      TournamentDataService.validate(data);
+
       setTournamentTitle(data.title);
       setTournamentMode(data.mode ?? 'STANDARD');
       setTournamentCategories(data.categories ?? null);
-      setInitialItems(data.items.map((item: any) => ({
-        ...item,
-        youtubeVideoId: getYouTubeVideoId(item.youtubeUrl)
-      })));
+      setInitialItems(TournamentDataService.enrichItems(data.items));
     } catch (e: any) {
-      setDataError(e.message || "Erreur lors de la récupération des données du tournoi.");
-      console.error("Erreur chargement sessionStorage:", e);
+      setDataError(e.message || 'Erreur lors de la récupération des données du tournoi.');
+      console.error('Erreur chargement sessionStorage:', e);
     } finally {
       setIsLoadingData(false);
     }
   }, [tournamentId]);
 
-  return { tournamentId, tournamentTitle, initialItems, isLoadingData, dataError, setDataError, tournamentMode, tournamentCategories };
+  return {
+    tournamentId,
+    tournamentTitle,
+    initialItems,
+    isLoadingData,
+    dataError,
+    setDataError,
+    tournamentMode,
+    tournamentCategories,
+  };
 }
