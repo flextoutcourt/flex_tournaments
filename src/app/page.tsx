@@ -49,7 +49,7 @@ export default function HomePage() {
 
         <div ref={heroRef} className="bg-slate-800/70 border-2 border-slate-700/60 hover:border-slate-700 p-8 md:p-12 rounded-2xl relative overflow-hidden shadow-2xl transition-all duration-500 backdrop-blur-sm">
           {/* Halo Effect */}
-          <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+          <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-75 pointer-events-none"></div>
           
           {/* Animated particles */}
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl animate-pulse"></div>

@@ -1,4 +1,8 @@
-// hooks/useTrackingForm.ts
+/**
+ * useTrackingForm Hook - Track detailed form field changes
+ * Delegates to useTracking for actual tracking
+ */
+
 'use client';
 
 import { useCallback } from 'react';
@@ -43,3 +47,4 @@ export function useTrackingForm(formName: string) {
 
   return { trackFieldChange, trackFieldFocus, trackFieldBlur };
 }
+

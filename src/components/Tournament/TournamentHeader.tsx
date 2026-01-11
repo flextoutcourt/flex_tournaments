@@ -33,7 +33,7 @@ export default function TournamentHeader({
         className="bg-gradient-to-br from-slate-800/80 via-slate-800/80 to-slate-900/80 border-2 border-indigo-500/20 hover:border-indigo-500/40 p-6 md:p-10 rounded-2xl backdrop-blur-sm shadow-2xl transition-all duration-500 relative group animate-borderGlow overflow-hidden"
       >
         {/* Mouse Halo Effect */}
-        <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+        <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-75 pointer-events-none"></div>
 
         {/* Animated gradient orbs */}
         <div className="absolute -top-20 -right-20 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl group-hover:bg-indigo-600/30 transition-all duration-700 animate-pulse"></div>

@@ -1,7 +1,8 @@
 // app/tournament/[id]/live/page.tsx
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useTransition } from 'react';
+import { flushSync } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { FaStopCircle } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +11,8 @@ import { useTournamentData } from '@/hooks/useTournamentData';
 import { useTournamentLogic } from '@/hooks/useTournamentLogic';
 import { useYouTubeApi, useYouTubePlayers } from '@/hooks/useYoutubeApi';
 import { useTmiClient } from '@/hooks/useTmiClient';
+import { useTournamentVotes } from '@/hooks/useTournamentVotes';
+import { useTournamentPersistence } from '@/hooks/useTournamentPersistence';
 import { AVAILABLE_TOURNAMENT_SIZES } from '@/constants';
 import LoadingSpinner from '@/components/Shared/LoadingSpinner';
 import ErrorDisplay from '@/components/Tournament/ErrorDisplay';
@@ -106,6 +109,69 @@ export default function TournamentLivePage() {
     tournamentId,
   });
 
+  // Hook for persisting tournament state to database per user
+  useTournamentPersistence({
+    tournamentId,
+    currentMatchIndex,
+    currentRoundNumber,
+    tournamentWinner,
+    matches,
+    twitchChannel: liveTwitchChannel || undefined,
+  });
+
+  // Ref to store current match index for use in vote callback
+  const currentMatchIndexRef = React.useRef(currentMatchIndex);
+  const totalVotesProcessedRef = React.useRef(0);
+  
+  // Update ref when currentMatchIndex changes
+  React.useEffect(() => {
+    currentMatchIndexRef.current = currentMatchIndex;
+  }, [currentMatchIndex]);
+
+  // Memoize batch votes handler to prevent unnecessary reconnects
+  const handleBatchVotes = React.useCallback((batchVotes: any) => {
+    console.log('[TournamentLivePage] 📊 handleBatchVotes called:', {
+      batchSize: batchVotes.length,
+      votes: batchVotes.map((v: any) => ({ username: v.username, vote: v.vote })),
+    });
+    // Process entire batch at once - animations handle individual updates
+    flushSync(() => {
+      batchVotes.forEach((vote: any) => {
+        const itemId = vote.vote === '1' ? 'item1' : 'item2';
+        totalVotesProcessedRef.current++;
+        console.log('[TournamentLivePage] Processing vote:', {
+          username: vote.username,
+          vote: vote.vote,
+          itemId,
+          totalProcessed: totalVotesProcessedRef.current,
+        });
+        updateScore(currentMatchIndexRef.current, itemId);
+      });
+    });
+  }, [updateScore]);
+
+  // Hook for SSE vote subscription with batching (auto-connects on init)
+  const { isConnected: isVotesConnected, votes, forceReconnect, flushPendingVotes } = useTournamentVotes({
+    tournamentId: tournamentId || '',
+    autoConnect: !!tournamentId,
+    batchWindowMs: 20, // Faster batching (20ms window)
+    onBatchVotes: handleBatchVotes,
+  });
+
+  // Flush pending votes when match changes and page is ready
+  useEffect(() => {
+    if (activeMatch && !matches[currentMatchIndex]?.isProcessing) {
+      flushPendingVotes();
+    }
+  }, [activeMatch?.id, currentMatchIndex, matches, flushPendingVotes]);
+
+  // Reconnect vote listener when tournament starts
+  useEffect(() => {
+    if (isTournamentActive && tournamentId) {
+      forceReconnect();
+    }
+  }, [isTournamentActive, tournamentId, forceReconnect]);
+
   // Combiner les erreurs pour l'affichage
   useEffect(() => {
     if (_dataError) setPageError(_dataError);
@@ -113,27 +179,33 @@ export default function TournamentLivePage() {
     // tmiError est géré dans TournamentHeader mais pourrait aussi être mis ici
   }, [_dataError, _playerError]);
 
-  // Show modal for Twitch channel when tournament is restored
+  // Show modal for Twitch channel - either for tournament restoration or first load
   useEffect(() => {
     // Wait for data to load before checking
     if (isLoadingData) return;
     
-    console.log('Restore check:', { 
-      hasShownRestoreNotification, 
-      isTournamentActive, 
-      matchesLength: matches.length, 
+    console.log('[TournamentLivePage] Channel modal check:', {
+      hasShownRestoreNotification,
+      isTournamentActive,
+      hasMatchesLength: matches.length,
       urlChannel,
       liveTwitchChannel,
-      isLoadingData
+      showChannelModal,
     });
-    
+
+    // Scenario 1: Tournament was restored from localStorage
     if (!hasShownRestoreNotification && isTournamentActive && matches.length > 0) {
-      // Tournament was restored from localStorage
-      console.log('Tournament restored - opening modal for channel confirmation');
+      console.log('[TournamentLivePage] Showing modal for tournament restoration');
       setShowChannelModal(true);
       setHasShownRestoreNotification(true);
     }
-  }, [matches.length, hasShownRestoreNotification, urlChannel, liveTwitchChannel, isLoadingData, isTournamentActive]);
+    // Scenario 2: First load - no channel from URL and tournament not active
+    else if (!hasShownRestoreNotification && !isTournamentActive && !urlChannel && !liveTwitchChannel && !showChannelModal) {
+      console.log('[TournamentLivePage] Showing modal for first-time channel selection');
+      setShowChannelModal(true);
+      setHasShownRestoreNotification(true);
+    }
+  }, [matches.length, hasShownRestoreNotification, urlChannel, liveTwitchChannel, isLoadingData, isTournamentActive, showChannelModal]);
 
   // Detect when first round ends and show recap
   useEffect(() => {
@@ -164,13 +236,14 @@ export default function TournamentLivePage() {
   }, []);
 
   const handleChannelConfirm = useCallback((channel: string) => {
+    console.log('[TournamentLivePage] Channel confirmed:', channel);
     setLiveTwitchChannel(channel);
     setShowChannelModal(false);
     
-    toast.success('Tournoi restauré ! Vous pouvez reprendre là où vous vous êtes arrêté.', {
+    toast.success('Canal Twitch connecté ! Les votes sont maintenant actifs.', {
       duration: 4000,
       position: 'top-center',
-      icon: '🔄',
+      icon: '✅',
     });
   }, []);
 
@@ -282,6 +355,8 @@ export default function TournamentLivePage() {
             isTmiConnected={isTmiConnected}
             tmiError={_tmiError}
             generalError={pageError && activeMatch ? pageError : null}
+            isVotesConnected={isVotesConnected}
+            voteCount={votes.length}
           />
       </div>
 

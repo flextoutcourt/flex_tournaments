@@ -1,61 +1,32 @@
-// hooks/useMouseHalo.ts
-import { useRef, useEffect } from 'react';
+/**
+ * useMouseHalo Hook - Creates interactive mouse halo effect
+ * Delegates to mouseUtils for pure logic, manages lifecycle
+ */
 
-interface MousePosition {
-  x: number;
-  y: number;
-}
+import { useRef, useEffect, useMemo } from 'react';
+import { createMouseHaloHandler } from '@/lib/utils/mouseUtils';
 
 export const useMouseHalo = (color: string = 'rgba(99, 102, 241, 0.3)') => {
   const elementRef = useRef<HTMLDivElement>(null);
-  const mousePos = useRef<MousePosition>({ x: 0, y: 0 });
+  const handlerRef = useRef<ReturnType<typeof createMouseHaloHandler>>(null);
+  
+  // Memoize color to prevent unnecessary re-creates
+  const memoizedColor = useMemo(() => color, [color]);
 
   useEffect(() => {
-    const element = elementRef.current;
-    if (!element) return;
+    const handler = createMouseHaloHandler(elementRef.current, memoizedColor);
+    handlerRef.current = handler;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!element.parentElement) return;
-
-      const rect = element.getBoundingClientRect();
-      const parentRect = element.parentElement.getBoundingClientRect();
-
-      mousePos.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      };
-
-      // Update the halo position
-      const halo = element.querySelector('.halo-effect') as HTMLElement;
-      if (halo) {
-        halo.style.background = `radial-gradient(circle 300px at ${mousePos.current.x}px ${mousePos.current.y}px, ${color}, transparent 80%)`;
-      }
-    };
-
-    const handleMouseEnter = () => {
-      const halo = element.querySelector('.halo-effect') as HTMLElement;
-      if (halo) {
-        halo.style.opacity = '1';
-      }
-    };
-
-    const handleMouseLeave = () => {
-      const halo = element.querySelector('.halo-effect') as HTMLElement;
-      if (halo) {
-        halo.style.opacity = '0';
-      }
-    };
-
-    element.addEventListener('mousemove', handleMouseMove);
-    element.addEventListener('mouseenter', handleMouseEnter);
-    element.addEventListener('mouseleave', handleMouseLeave);
+    if (handler) {
+      handler.attach();
+    }
 
     return () => {
-      element.removeEventListener('mousemove', handleMouseMove);
-      element.removeEventListener('mouseenter', handleMouseEnter);
-      element.removeEventListener('mouseleave', handleMouseLeave);
+      if (handler) {
+        handler.detach();
+      }
     };
-  }, [color]);
+  }, [memoizedColor]);
 
   return elementRef;
 };

@@ -1,10 +1,10 @@
 // app/tournament/[id]/live/components/ParticipantCard.tsx
 import React, { RefObject } from 'react';
-import { motion }  from 'framer-motion';
+import { motion, AnimatePresence }  from 'framer-motion';
 import { FaYoutube } from 'react-icons/fa';
 import { MatchParticipant } from '@/types';
-import { scoreVariants } from '@/animationVariants';
 import VoteBar from '../Shared/Votebar';
+import AnimatedScoreDigit from './AnimatedScoreDigit';
 
 interface ParticipantCardProps {
   participant: MatchParticipant;
@@ -38,7 +38,6 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   registerBarRef,
 }) => {
 
-  console.log(votedUsers);
 
   const isPlayer1 = number === 1;
   const accentColor = isPlayer1 ? 'indigo' : 'pink';
@@ -46,8 +45,7 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
   return (
     <motion.div
-      className="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 hover:border-slate-600 rounded-xl shadow-xl flex flex-col h-full overflow-hidden transition-all duration-300"
-      whileHover={{ y: -2 }}
+      className="relative bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 hover:border-slate-600 rounded-xl shadow-xl flex flex-col h-full overflow-hidden transition-all duration-75"
       onMouseEnter={onMouseEnterPlayer}
       onMouseLeave={onMouseLeavePlayer}
     >
@@ -115,15 +113,17 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
 
         {/* Score Display - Compact */}
         <motion.div
-          key={`score-${participant.id}-${participant.score}`}
-          variants={scoreVariants} 
-          initial="initial" 
-          animate="animate"
           className={`flex-shrink-0 text-center bg-gradient-to-br from-slate-700 to-slate-800 border border-${accentColor}-600/30 rounded-lg py-2 shadow-lg`}
         >
           <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Score</div>
-          <div className={`text-4xl font-black text-${accentColor}-400`}>
-            {participant.score}
+          <div className={`flex items-center justify-center gap-0`}>
+            {String(participant.score).split('').map((digit, index) => (
+              <AnimatedScoreDigit
+                key={`${participant.id}-pos-${index}-val-${digit}`}
+                digit={parseInt(digit, 10)}
+                accentColor={accentColor}
+              />
+            ))}
           </div>
         </motion.div>
 
@@ -141,9 +141,9 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
         {/* Winner Button - Compact */}
         <motion.button
           onClick={onDeclareWinner}
-          className={`w-full flex-shrink-0 px-3 py-2.5 bg-gradient-to-r ${buttonGradient} text-white text-sm font-black rounded-lg shadow-lg border border-white/10 hover:border-white/30 transition-all`}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className={`w-full flex-shrink-0 px-3 py-2.5 bg-gradient-to-r ${buttonGradient} text-white text-sm font-black rounded-lg shadow-lg border border-white/10 hover:border-white/30 transition-all duration-75`}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.99 }}
         >
           <span className="flex items-center justify-center gap-2">
             <span>👑</span>
@@ -187,4 +187,4 @@ const ParticipantCard: React.FC<ParticipantCardProps> = ({
   );
 };
 
-export default ParticipantCard;
+export default React.memo(ParticipantCard);

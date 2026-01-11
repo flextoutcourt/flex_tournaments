@@ -1,21 +1,20 @@
-// app/tournament/[id]/live/hooks/useTmiClient.ts
-import { useState, useEffect, useRef } from 'react';
-import tmi from 'tmi.js';
-import { CurrentMatch } from '../types';
-import { VOTE_KEYWORDS_ITEM1, VOTE_KEYWORDS_ITEM2 } from '../constants';
-import toast from "react-hot-toast"
+/**
+ * useTmiClient Hook - Orchestrates TMI services for tournament voting
+ * 
+ * Responsibilities:
+ * - Manages TMI connection lifecycle
+ * - Coordinates vote handling and deduplication
+ * - Handles moderator commands
+ * - Pure orchestration - all business logic delegated to services
+ */
 
-interface UseTmiClientProps {
-  liveTwitchChannel: string | null;
-  isTournamentActive: boolean;
-  tournamentWinner: any | null;
-  activeMatch: CurrentMatch | null;
-  currentMatchIndex: number;
-  onScoreUpdate: (matchIndex: number, itemKey: 'item1' | 'item2') => void;
-  onModifyScore: (matchIndex: number, itemKey: 'item1' | 'item2', amount: number) => void;
-  onVoteReceived?: (itemKey: 'item1' | 'item2') => void;
-  tournamentId?: string | null; // Add tournament ID for vote recording
-}
+import { useState, useEffect, useRef } from 'react';
+import { UseTmiClientProps, CurrentMatch, VotePayload } from '@/types/tmi';
+import { VOTE_KEYWORDS_ITEM1, VOTE_KEYWORDS_ITEM2 } from '../constants';
+import { TmiConnectionService } from '@/lib/services/tmiConnectionService';
+import { VoteService } from '@/lib/services/voteService';
+import { VoteDuplicationService } from '@/lib/services/voteDuplicationService';
+import { TmiMessageHandlerService } from '@/lib/services/tmiMessageHandler';
 
 export function useTmiClient({
   liveTwitchChannel,
@@ -26,314 +25,243 @@ export function useTmiClient({
   onScoreUpdate,
   onModifyScore,
   onVoteReceived,
-  tournamentId
+  tournamentId,
 }: UseTmiClientProps) {
-  const [tmiClient, setTmiClient] = useState<tmi.Client | null>(null);
+  // Service instances
+  const connectionServiceRef = useRef<TmiConnectionService | null>(null);
+  const voteServiceRef = useRef<VoteService | null>(null);
+  const deduplicationServiceRef = useRef<VoteDuplicationService | null>(null);
+  const messageHandlerServiceRef = useRef<TmiMessageHandlerService | null>(null);
+
+  // State
   const [isTmiConnected, setIsTmiConnected] = useState(false);
   const [tmiError, setTmiError] = useState<string | null>(null);
-  
-  const votedUsers = useRef(new Set<{username: string;votedItem: string}>());
-  const superVoteUsers = useRef(new Set<string>()); // Track users who have used their super vote for the entire tournament
-  const superVotesThisMatch = useRef(new Set<string>()); // Track which users used super vote in current match only
 
-  // Function to record vote to database
-  const recordVoteToDatabase = async (itemId: string) => {
-    if (!tournamentId) {
-      console.warn('[Vote Recording] No tournamentId provided');
-      return;
-    }
-    
-    try {
-      console.log('[Vote Recording] Recording vote:', { itemId, tournamentId });
-      const response = await fetch('/api/votes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemId, tournamentId })
-      });
-      
-      const data = await response.json();
-      console.log('[Vote Recording] Response:', data);
-      
-      if (!response.ok) {
-        console.error('[Vote Recording] Error:', data);
-      }
-    } catch (error) {
-      console.error('[Vote Recording] Network error:', error);
-    }
-  };
-
-  // Créer un identifiant stable pour le match actuel
-  // Cet identifiant ne changera que si les participants ou le round/match changent réellement.
-  const matchIdentifier = activeMatch 
-    ? `${activeMatch.roundNumber}-${activeMatch.matchNumberInRound}-${activeMatch.item1.id}-${activeMatch.item2.id}` 
-    : null;
-
-  // Reset super vote users when tournament starts/restarts
+  // Initialize services
   useEffect(() => {
-    if (isTournamentActive && !tournamentWinner) {
-      // Tournament is active, clear super votes for fresh start
-      superVoteUsers.current.clear();
-      console.log(`[TMI SUPER VOTE DEBUG] Tournament started/restarted. Super votes cleared.`);
+    console.log('[useTmiClient] Initializing services, tournamentId:', tournamentId);
+    if (!connectionServiceRef.current) {
+      connectionServiceRef.current = new TmiConnectionService();
     }
-  }, [isTournamentActive, tournamentWinner]);
-
-  useEffect(() => {
-    // Ce useEffect se déclenchera maintenant uniquement lorsque 'matchIdentifier' change,
-    // ce qui signifie qu'un nouveau match (différents participants ou round/numéro de match) commence.
-    if (matchIdentifier) { // S'assurer qu'il y a un match actif
-      console.log(`[TMI VOTE DEBUG] Changement d'identifiant de match: ${matchIdentifier}. Réinitialisation des votants. Votants avant clear:`, Array.from(votedUsers.current));
-      votedUsers.current.clear();
-      superVotesThisMatch.current.clear(); // Clear super votes for this match
-      console.log(`[TMI VOTE DEBUG] Votants après clear:`, Array.from(votedUsers.current));
+    if (!voteServiceRef.current && tournamentId) {
+      voteServiceRef.current = new VoteService(tournamentId);
+      console.log('[useTmiClient] VoteService initialized');
     }
-    // Si activeMatch devient null (fin du tournoi), matchIdentifier devient null,
-    // et ce hook ne videra pas les votants, ce qui est correct.
-  }, [matchIdentifier]); // La dépendance est maintenant l'identifiant stable.
+    if (!deduplicationServiceRef.current) {
+      deduplicationServiceRef.current = new VoteDuplicationService();
+    }
+    if (!messageHandlerServiceRef.current) {
+      messageHandlerServiceRef.current = new TmiMessageHandlerService();
+    }
+  }, [tournamentId]);
 
+  // Update match in deduplication service
   useEffect(() => {
-    if (!isTournamentActive || !liveTwitchChannel || tournamentWinner) {
-      if (tmiClient) {
-        tmiClient.disconnect();
-        setTmiClient(null);
+    if (deduplicationServiceRef.current && activeMatch) {
+      const matchId = `${activeMatch.roundNumber}-${activeMatch.matchNumberInRound}-${activeMatch.item1.id}-${activeMatch.item2.id}`;
+      deduplicationServiceRef.current.setCurrentMatch(matchId);
+    }
+  }, [activeMatch]);
+
+  // Manage TMI connection
+  useEffect(() => {
+    console.log('[useTmiClient] Connection effect running:', {
+      liveTwitchChannel,
+      tournamentWinner,
+      willConnect: !!liveTwitchChannel && !tournamentWinner,
+    });
+
+    // Disconnect if tournament has ended or no channel
+    if (!liveTwitchChannel || tournamentWinner) {
+      console.log('[useTmiClient] ⚠️ Disconnecting TMI');
+      if (connectionServiceRef.current) {
+        connectionServiceRef.current.disconnect();
         setIsTmiConnected(false);
       }
       return;
     }
 
-    const client = new tmi.Client({
-      options: { debug: false },
-      channels: [liveTwitchChannel],
-    });
+    let isMounted = true;
 
-    client.on('connected', (_address, _port) => {
-      setIsTmiConnected(true);
-      setTmiError(null);
-      console.log(`TMI.js: Connecté à ${liveTwitchChannel}`);
-    });
+    const connect = async () => {
+      console.log('[useTmiClient] 🔌 Starting TMI connection to:', liveTwitchChannel);
+      if (connectionServiceRef.current && isMounted) {
+        const success = await connectionServiceRef.current.connect(liveTwitchChannel);
+        if (isMounted) {
+          console.log('[useTmiClient] Connection result:', { success, channel: liveTwitchChannel });
+          setIsTmiConnected(success);
+          if (!success) {
+            const state = connectionServiceRef.current.getState();
+            console.error('[useTmiClient] ❌ Connection failed:', state.error);
+            setTmiError(state.error);
+          } else {
+            console.log('[useTmiClient] ✅ TMI connected to:', liveTwitchChannel);
+            setTmiError(null);
+          }
+        }
+      }
+    };
 
-    client.on('disconnected', (reason) => {
-      setIsTmiConnected(false);
-      console.warn(`TMI.js: Déconnecté. Raison: ${reason}`);
-    });
-
-    client.connect().catch(err => {
-      setTmiError(`Impossible de se connecter au chat Twitch: "${liveTwitchChannel}".`);
-      setIsTmiConnected(false);
-      console.error("TMI.js: Erreur de connexion:", err);
-    });
-
-    setTmiClient(client);
+    connect();
 
     return () => {
-      if (client && client.readyState() === 'OPEN') {
-        client.disconnect();
+      console.log('[useTmiClient] Cleanup: marking unmounted');
+      isMounted = false;
+      if (connectionServiceRef.current) {
+        connectionServiceRef.current.disconnect();
+        setIsTmiConnected(false);
       }
-      setTmiClient(null);
-      setIsTmiConnected(false);
     };
-  }, [isTournamentActive, liveTwitchChannel, tournamentWinner]);
+  }, [liveTwitchChannel, tournamentWinner]);
 
+  // Handle chat messages
   useEffect(() => {
-    // Ce hook attache/détache le gestionnaire de messages.
-    // Il se ré-exécutera si activeMatch change (même si c'est juste une nouvelle référence d'objet avec les mêmes données de match).
-    // C'est généralement acceptable, mais la logique de vote unique est maintenant protégée par le 'matchIdentifier' plus stable.
-    if (!tmiClient || !isTmiConnected || !activeMatch || tournamentWinner) return;
+    const client = connectionServiceRef.current?.getClient();
+    
+    console.log('[useTmiClient] Message handler effect triggered:', {
+      hasClient: !!client,
+      isReady: connectionServiceRef.current?.isReady(),
+      hasActiveMatch: !!activeMatch,
+      hasTournamentId: !!tournamentId,
+      activeMatchId: activeMatch?.item1?.id,
+    });
+    
+    // Need: client, active match, tournament id, and tournament not ended
+    if (!client || !activeMatch || !tournamentId || tournamentWinner) {
+      console.log('[useTmiClient] ⚠️ Skipping message handler - missing requirements:', {
+        hasClient: !!client,
+        hasActiveMatch: !!activeMatch,
+        hasTournamentId: !!tournamentId,
+        hasTournamentWinner: !!tournamentWinner,
+      });
+      return;
+    }
 
-    const item1Name = activeMatch.item1.name;
-    const item2Name = activeMatch.item2.name;
-    const item1VoteKeywords = [...VOTE_KEYWORDS_ITEM1];
-    const item2VoteKeywords = [...VOTE_KEYWORDS_ITEM2];
+    console.log('[useTmiClient] ✅ Attaching message listener to TMI client');
 
-    const messageHandler = (channel: string, tags: tmi.ChatUserstate, message: string, self: boolean) => {
-      if (self || !activeMatch || !tags.username) return; // Vérifier activeMatch à nouveau ici au cas où il deviendrait null pendant le traitement
+    const messageHandler = (
+      channel: string,
+      tags: any,
+      message: string,
+      self: boolean
+    ) => {
+      if (self || !tags.username) {
+        if (self) console.log('[useTmiClient] Ignoring self message');
+        if (!tags.username) console.log('[useTmiClient] Ignoring message without username');
+        return;
+      }
 
       const username = tags.username.toLowerCase();
-      const messageLower = message.toLowerCase().trim();
+      const messageHandler = messageHandlerServiceRef.current;
+      const voteService = voteServiceRef.current;
+      const deduplicationService = deduplicationServiceRef.current;
 
-      // Log pour le débogage du match actif au moment du message
-      console.log(`[TMI VOTE DEBUG] Message de ${username}: "${messageLower}". Match Actif ID (via closure): ${activeMatch.roundNumber}-${activeMatch.matchNumberInRound}-${activeMatch.item1.id}-${activeMatch.item2.id}. CurrentMatchIndex: ${currentMatchIndex}`);
-      console.log(`[TMI VOTE DEBUG] Votants actuels pour ${username} (avant check):`, Array.from(votedUsers.current));
-
-      // Moderator commands - only for luniqueflex
-      if (username === 'luniqueflex') {
-        const addVoteMatch = messageLower.match(/^\.\.add vote ([12]) (\d+)$/);
-        const removeVoteMatch = messageLower.match(/^\.\.remove vote ([12]) (\d+)$/);
-        const setVoteMatch = messageLower.match(/^\.\.set vote ([12]) (\d+)$/);
-
-        if (addVoteMatch) {
-          const voteNumber = addVoteMatch[1];
-          const amount = parseInt(addVoteMatch[2], 10);
-          const votedItem = voteNumber === '1' ? 'item1' : 'item2';
-          const itemName = votedItem === 'item1' ? item1Name : item2Name;
-          
-          onModifyScore(currentMatchIndex, votedItem, amount);
-          console.log(`[TMI MOD COMMAND] ${username} forced add ${amount} vote(s) for ${votedItem} (${itemName})`);
-          
-          toast(`🔧 Mod: +${amount} vote${amount > 1 ? 's' : ''} pour ${itemName}`, {
-            icon: voteNumber === '1' ? '1️⃣' : '2️⃣',
-            style: {
-              borderRadius: '10px',
-              background: '#6366f1',
-              color: '#fff',
-            },
-            position: 'top-center'
-          });
-          return;
+      console.log('[useTmiClient] 📨 Received message from', username, ':', message, {
+        hasMessageHandler: !!messageHandler,
+        hasVoteService: !!voteService,
+        hasDedup: !!deduplicationService,
+        serviceRefs: {
+          messageHandler: !!messageHandlerServiceRef.current,
+          voteService: !!voteServiceRef.current,
+          dedup: !!deduplicationServiceRef.current,
         }
+      });
 
-        if (removeVoteMatch) {
-          const voteNumber = removeVoteMatch[1];
-          const amount = parseInt(removeVoteMatch[2], 10);
-          const votedItem = voteNumber === '1' ? 'item1' : 'item2';
-          const itemName = votedItem === 'item1' ? item1Name : item2Name;
-          
-          onModifyScore(currentMatchIndex, votedItem, -amount);
-          console.log(`[TMI MOD COMMAND] ${username} forced remove ${amount} vote(s) from ${votedItem} (${itemName})`);
-          
-          toast(`🔧 Mod: -${amount} vote${amount > 1 ? 's' : ''} pour ${itemName}`, {
-            icon: '❌',
-            style: {
-              borderRadius: '10px',
-              background: '#ef4444',
-              color: '#fff',
-            },
-            position: 'top-center'
-          });
-          return;
-        }
-
-        if (setVoteMatch) {
-          const voteNumber = setVoteMatch[1];
-          const targetScore = parseInt(setVoteMatch[2], 10);
-          const votedItem = voteNumber === '1' ? 'item1' : 'item2';
-          const itemName = votedItem === 'item1' ? item1Name : item2Name;
-          const currentScore = votedItem === 'item1' ? activeMatch.item1.score : activeMatch.item2.score;
-          const difference = targetScore - currentScore;
-          
-          onModifyScore(currentMatchIndex, votedItem, difference);
-          console.log(`[TMI MOD COMMAND] ${username} set score to ${targetScore} for ${votedItem} (${itemName}) [was ${currentScore}]`);
-          
-          toast(`🔧 Mod: Score défini à ${targetScore} pour ${itemName}`, {
-            icon: '⚙️',
-            style: {
-              borderRadius: '10px',
-              background: '#8b5cf6',
-              color: '#fff',
-            },
-            position: 'top-center'
-          });
-          return;
-        }
-      }
-
-      // Check if user has already voted
-      const hasVoted = Array.from(votedUsers.current).some(vote => vote.username === username);
-      if (hasVoted) {
-        console.log(`[TMI VOTE DEBUG] ${username} a déjà voté pour ce match (ID: ${matchIdentifier}). Vote ignoré.`);
-        return;
-      }
-
-      let votedItem: 'item1' | 'item2' | null = null;
-
-      console.log(item1VoteKeywords.some(keyword => messageLower == keyword));
-
-      if (item1VoteKeywords.some(keyword => messageLower == keyword)) {
-        votedItem = 'item1';
-        recordVoteToDatabase(activeMatch.item1.id);
-        toast(`${username} à voté pour ${item1Name}`,
-          {
-            icon: '1️',
-            style: {
-              borderRadius: '10px',
-              background: '#333',
-              color: '#fff',
-            },
-            position: 'bottom-left'
-          }
-        );
-      } else if (item2VoteKeywords.some(keyword => messageLower == keyword)) {
-        votedItem = 'item2';
-        recordVoteToDatabase(activeMatch.item2.id);
-        toast(`${username} à voté pour ${item2Name}`,
-          {
-            icon: '2️⃣',
-            style: {
-              borderRadius: '10px',
-              background: '#333',
-              color: '#fff',
-            },
-            position: 'bottom-right'
-          }
-        );
-      } else if (messageLower === 'super 1' || messageLower === 'super 2') {
-        // Super vote command
-        if (superVoteUsers.current.has(username)) {
-          console.log(`[TMI SUPER VOTE DEBUG] ${username} a déjà utilisé son super vote.`);
-          return;
-        }
-
-        votedItem = messageLower === 'super 1' ? 'item1' : 'item2';
-        const itemName = votedItem === 'item1' ? item1Name : item2Name;
-        const itemId = votedItem === 'item1' ? activeMatch.item1.id : activeMatch.item2.id;
-        
-        // Record super vote twice to database
-        recordVoteToDatabase(itemId);
-        recordVoteToDatabase(itemId);
-        
-        // Mark user as having used their super vote tournament-wide
-        superVoteUsers.current.add(username);
-        // Also mark in current match
-        superVotesThisMatch.current.add(username);
-        
-        toast(`⭐ ${username} a activé le SUPER VOTE pour ${itemName}! (+2 votes)`, {
-          icon: '⭐',
-          style: {
-            borderRadius: '10px',
-            background: '#f59e0b',
-            color: '#fff',
-          },
-          position: 'bottom-center'
+      if (!messageHandler || !voteService || !deduplicationService) {
+        console.warn('[useTmiClient] ❌ Missing services', {
+          hasMessageHandler: !!messageHandler,
+          hasVoteService: !!voteService,
+          hasDedup: !!deduplicationService,
         });
-
-        // Add vote twice for super vote
-        votedUsers.current.add({username, votedItem});
-        
-        // Trigger animations twice for super vote
-        if (onVoteReceived) {
-          onVoteReceived(votedItem);
-          onVoteReceived(votedItem);
-        }
-        
-        // Update score twice for super vote
-        onScoreUpdate(currentMatchIndex, votedItem);
-        onScoreUpdate(currentMatchIndex, votedItem);
-        console.log(`[TMI SUPER VOTE DEBUG] Super vote de ${username} pour ${votedItem} ENREGISTRÉ (x2). Nouveaux votants:`, Array.from(votedUsers.current));
         return;
       }
 
-      if (votedItem) {
-        votedUsers.current.add({username, votedItem});
-        
-        // Trigger animation before updating score
-        if (onVoteReceived) {
-          onVoteReceived(votedItem);
+      // Handle moderator commands
+      if (messageHandler.isModerator(username)) {
+        const command = messageHandler.parseModeratorCommand(message);
+        if (command) {
+          const votedItem = command.voteNumber === '1' ? 'item1' : 'item2';
+          const amount =
+            command.type === 'set'
+              ? command.targetScore! - (votedItem === 'item1'
+                  ? activeMatch.item1.score
+                  : activeMatch.item2.score)
+              : command.type === 'add'
+              ? command.amount
+              : -command.amount;
+
+          onModifyScore(currentMatchIndex, votedItem, amount);
+          console.log(`[TMI MOD] 🎯 ${command.type} ${amount} votes to ${votedItem}`);
+          return;
         }
-        
-        onScoreUpdate(currentMatchIndex, votedItem); // currentMatchIndex est utilisé ici
-        console.log(`[TMI VOTE DEBUG] Vote de ${username} pour ${votedItem} ENREGISTRÉ. Nouveaux votants:`, Array.from(votedUsers.current));
+      }
+
+      // Check for duplicate vote
+      if (deduplicationService.hasVoted(username)) {
+        console.log('[useTmiClient] ⏭️ Duplicate vote from', username, '- skipping');
+        return;
+      }
+
+      // Regular vote for item 1
+      if (messageHandler.isVoteKeyword(message, VOTE_KEYWORDS_ITEM1)) {
+        console.log('[useTmiClient] 🗳️ Vote for item1 from', username);
+        deduplicationService.markAsVoted(username);
+        const payload = voteService.createVotePayload('1', username);
+        console.log('[useTmiClient] 📤 Sending vote payload:', payload);
+        voteService.sendVote(payload).catch((err) => {
+          console.error('[TMI] ❌ Failed to send vote:', err);
+        });
+        return;
+      }
+
+      // Regular vote for item 2
+      if (messageHandler.isVoteKeyword(message, VOTE_KEYWORDS_ITEM2)) {
+        console.log('[useTmiClient] 🗳️ Vote for item2 from', username);
+        deduplicationService.markAsVoted(username);
+        const payload = voteService.createVotePayload('2', username);
+        console.log('[useTmiClient] 📤 Sending vote payload:', payload);
+        voteService.sendVote(payload).catch((err) => {
+          console.error('[TMI] ❌ Failed to send vote:', err);
+        });
+        return;
+      }
+
+      // Super vote
+      if (messageHandler.isSuperVote(message)) {
+        deduplicationService.markAsVoted(username);
+        const voteValue = messageHandler.extractSuperVoteValue(message);
+        if (voteValue) {
+          const payloads = voteService.createSuperVotePayloads(voteValue, username);
+          voteService.sendVotes(payloads).catch((err) => {
+            console.error('[TMI] Failed to send super votes:', err);
+          });
+        }
+        return;
       }
     };
 
-    tmiClient.on('message', messageHandler);
-    console.log(`TMI.js: Écouteur de messages activé pour: ${item1Name} (${item1VoteKeywords.join(', ')}) vs ${item2Name} (${item2VoteKeywords.join(', ')}) (Match ID: ${matchIdentifier})`);
+    client.on('message', messageHandler);
 
     return () => {
-      if (tmiClient) {
-        tmiClient.removeListener('message', messageHandler);
-        console.log(`TMI.js: Écouteur de messages désactivé (Match ID était: ${matchIdentifier}).`);
+      if (client) {
+        client.removeListener('message', messageHandler);
       }
     };
-  }, [tmiClient, isTmiConnected, activeMatch, currentMatchIndex, tournamentWinner, onScoreUpdate, onModifyScore, onVoteReceived, matchIdentifier]);
+  }, [
+    isTournamentActive,
+    activeMatch,
+    tournamentId,
+    tournamentWinner,
+    currentMatchIndex,
+    onModifyScore,
+  ]);
 
-  return { tmiClient, isTmiConnected, tmiError, setTmiError, votedUsers, superVotesThisMatch };
+  return {
+    tmiClient: connectionServiceRef.current?.getClient() || null,
+    isTmiConnected,
+    tmiError,
+    setTmiError,
+    votedUsers: new Map(),
+    superVotesThisMatch: new Set(),
+  };
 }

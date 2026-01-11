@@ -30,7 +30,7 @@ export default function ParticipantsSection({
         className="bg-gradient-to-br from-slate-800/50 via-slate-800/50 to-slate-900/50 border-2 border-purple-500/20 hover:border-purple-500/40 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-xl transition-all duration-500 relative overflow-hidden group"
       >
         {/* Mouse Halo Effect */}
-        <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+        <div className="halo-effect absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-75 pointer-events-none"></div>
 
         {/* Background effects */}
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-600/10 rounded-full blur-2xl group-hover:bg-purple-600/20 transition-all duration-700"></div>

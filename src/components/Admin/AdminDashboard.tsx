@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTracking } from '@/hooks/useTracking';
-import { FaUsers, FaPlus, FaEdit, FaTrash, FaBan, FaCheck, FaSearch, FaExclamationCircle, FaHistory } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaEdit, FaTrash, FaBan, FaCheck, FaSearch, FaExclamationCircle, FaHistory, FaSignOutAlt, FaCircle } from 'react-icons/fa';
+import { LoggedInAccountInfo } from './LoggedInAccountInfo';
 
 interface User {
   id: string;
@@ -15,6 +16,17 @@ interface User {
   bannedReason: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface UserSessionStatus {
+  isLoggedIn: boolean;
+  sessionCount: number;
+  mostRecentSession: {
+    loginAt: string;
+    lastActivity: string;
+    expiresAt: string;
+    ipAddress: string | null;
+  } | null;
 }
 
 interface FormData {
@@ -44,6 +56,9 @@ export function AdminDashboard() {
   });
   const [banReason, setBanReason] = useState('');
   const [showBanModal, setShowBanModal] = useState(false);
+  const [userSessionStatus, setUserSessionStatus] = useState<UserSessionStatus | null>(null);
+  const [loadingSessionStatus, setLoadingSessionStatus] = useState(false);
+  const [showKickModal, setShowKickModal] = useState(false);
 
   // Redirect if not authenticated (middleware handles admin check)
   useEffect(() => {
@@ -59,6 +74,13 @@ export function AdminDashboard() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Fetch session status when user is selected
+  useEffect(() => {
+    if (selectedUser) {
+      fetchUserSessionStatus(selectedUser.id);
+    }
+  }, [selectedUser]);
 
   const fetchUsers = async () => {
     try {
@@ -229,6 +251,48 @@ export function AdminDashboard() {
     setSelectedTab('create');
   };
 
+  const fetchUserSessionStatus = async (userId: string) => {
+    try {
+      setLoadingSessionStatus(true);
+      const response = await fetch(`/api/admin/users/${userId}/session-status`);
+      if (!response.ok) {
+        throw new Error('Erreur lors de la vérification du statut');
+      }
+      const data = await response.json();
+      setUserSessionStatus(data.data);
+    } catch (err) {
+      console.error(err);
+      setUserSessionStatus(null);
+    } finally {
+      setLoadingSessionStatus(false);
+    }
+  };
+
+  const handleKickUser = async (userId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir déconnecter cet utilisateur ?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/kick`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la déconnexion');
+      }
+
+      setSuccess('Utilisateur déconnecté avec succès');
+      setShowKickModal(false);
+      await fetchUserSessionStatus(userId);
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      setTimeout(() => setError(null), 5000);
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -278,6 +342,9 @@ export function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Logged In Account Info */}
+        <LoggedInAccountInfo />
+
         {/* Tab Navigation */}
         <div className="flex gap-3 mb-8">
           <button
@@ -418,6 +485,39 @@ export function AdminDashboard() {
                       })}
                     </p>
                   </div>
+
+                  {/* Login Status */}
+                  <div className="p-4 bg-slate-700/30 border border-slate-600 rounded-lg">
+                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Statut de Connexion</label>
+                    {loadingSessionStatus ? (
+                      <p className="text-slate-300 text-sm animate-pulse">Vérification en cours...</p>
+                    ) : userSessionStatus?.isLoggedIn ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <FaCircle className="text-green-500 text-xs" />
+                          <span className="text-green-400 font-medium text-sm">En ligne (connecté)</span>
+                        </div>
+                        {userSessionStatus.mostRecentSession && (
+                          <div className="text-xs text-slate-400 space-y-1 mt-2">
+                            <p>
+                              <strong>Connexion:</strong> {new Date(userSessionStatus.mostRecentSession.loginAt).toLocaleString('fr-FR')}
+                            </p>
+                            {userSessionStatus.mostRecentSession.ipAddress && (
+                              <p>
+                                <strong>IP:</strong> {userSessionStatus.mostRecentSession.ipAddress}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <FaCircle className="text-slate-500 text-xs" />
+                        <span className="text-slate-400 text-sm">Hors ligne</span>
+                      </div>
+                    )}
+                  </div>
+
                   {selectedUser.banned && (
                     <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                       <p className="text-xs font-semibold text-red-400 uppercase tracking-wide mb-2">Raison du ban</p>
@@ -433,6 +533,18 @@ export function AdminDashboard() {
                       <FaEdit />
                       Modifier
                     </button>
+
+                    {userSessionStatus?.isLoggedIn && (
+                      <button
+                        onClick={() => {
+                          setShowKickModal(true);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 rounded-lg font-medium border border-yellow-500/30 transition-all duration-200"
+                      >
+                        <FaSignOutAlt />
+                        Déconnecter
+                      </button>
+                    )}
 
                     {selectedUser.banned ? (
                       <button
@@ -490,6 +602,33 @@ export function AdminDashboard() {
                           className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all"
                         >
                           Confirmer
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Kick Modal */}
+                {showKickModal && (
+                  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-sm w-full animate-scaleIn">
+                      <h4 className="text-xl font-bold text-white mb-4">Déconnecter l'utilisateur</h4>
+                      <p className="text-slate-400 mb-6">
+                        Êtes-vous sûr de vouloir déconnecter <strong className="text-white">{selectedUser.email}</strong> ? 
+                        Cela fermera toutes ses sessions actives.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setShowKickModal(false)}
+                          className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-all"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          onClick={() => handleKickUser(selectedUser.id)}
+                          className="flex-1 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-all"
+                        >
+                          Déconnecter
                         </button>
                       </div>
                     </div>

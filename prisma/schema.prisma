@@ -23,8 +23,11 @@ model User {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   tournaments  Tournament[] // Tournois créés par l'utilisateur
+  tournamentSessions TournamentSession[] // Active tournament sessions
+  votes        Vote[] // Votes from this user
   ActivityLog  ActivityLog[]
   passwordResetTokens PasswordResetToken[]
+  sessions     UserSession[] // Active user sessions
 }
 
 enum UserRole {
@@ -45,13 +48,48 @@ model Tournament {
   // Catégories utilisées uniquement si mode == TWO_CATEGORY
   categoryA   String?
   categoryB   String?
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String? // ID de l'utilisateur qui a créé le tournoi (optionnel pour les anciens tournois)
   createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
   Items       Item[] // Liste des items participant à ce tournoi
+  sessions    TournamentSession[] // Active tournament sessions
+  votes       Vote[] // All votes for this tournament
 
   @@index([createdById])
+  @@index([status])
+}
+
+// NEW: Track who is running which tournament on which device
+model TournamentSession {
+  id            String   @id @default(cuid())
+  tournamentId  String
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  userId        String   // Who is running this tournament
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  deviceId      String? // Device identifier (browser fingerprint, optional)
+  twitchChannel String? // Connected Twitch channel for this session
+  
+  // State persistence for this user's progress through the tournament
+  isActive      Boolean  @default(true) // Is this session currently active
+  currentMatchIndex Int @default(0) // Which match this user is on
+  currentRoundNumber Int @default(0) // Which round this user is on
+  tournamentWinnerId String? // ID of winning item for this user's session (if tournament is complete)
+  stateJson     Json? // Full state data (matches, participants, scores, etc.)
+  
+  startedAt     DateTime @default(now())
+  lastActivityAt DateTime @updatedAt
+  endedAt       DateTime? // When session ended
+  
+  createdAt     DateTime @default(now())
+  
+  @@unique([tournamentId, userId]) // One active session per user per tournament
+  @@index([tournamentId])
+  @@index([userId])
+  @@index([isActive])
 }
 
 enum Status {
@@ -75,6 +113,8 @@ model Item {
 
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // Si un tournoi est supprimé, ses items le sont aussi
+  
+  votes      Vote[] // Votes for this item
 
   @@index([tournamentId]) // Index pour optimiser les requêtes sur le tournoi
 }
@@ -128,11 +168,56 @@ model PasswordResetToken {
 
 // Modèle pour les votes
 model Vote {
+  id             String   @id @default(cuid())
+  itemId         String   // ID de l'item voté
+  item           Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  tournamentId   String   // ID du tournoi
+  tournament     Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  
+  // NEW: Track user voting to prevent duplicates
+  userId         String?  // Who voted (null for anonymous/pre-auth votes)
+  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // NEW: Track which match this vote is for (for deduplication per match)
+  matchIndex     Int?     // Which match this vote is for (allows duplicate votes for different matches)
+  
+  // NEW: For Twitch chat votes - track channel + username
+  twitchUsername String?  // Twitch username if voted via chat
+  
+  createdAt      DateTime @default(now())
+  
+  @@unique([tournamentId, matchIndex, userId]) // One vote per user per match (for registered users)
+  @@unique([tournamentId, matchIndex, twitchUsername]) // One vote per Twitch user per match
+  @@index([tournamentId])
+  @@index([userId])
+  @@index([matchIndex])
+  @@index([createdAt])
+}
+
+// Modèle pour tracker les sessions utilisateurs actives (GDPR compliant)
+model UserSession {
   id        String   @id @default(cuid())
-  itemId    String   // ID de l'item voté
-  tournamentId String // ID du tournoi
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session tracking
+  sessionToken String   @unique // NextAuth session token
+  loginAt   DateTime @default(now())
+  lastActivity DateTime @updatedAt
+  expiresAt DateTime // When session expires
+  
+  // Device/Browser info
+  ipAddress String?
+  userAgent String?
+  
+  // Metadata
+  isActive  Boolean  @default(true)
+  
   createdAt DateTime @default(now())
   
-  @@index([tournamentId])
-  @@index([createdAt])
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expiresAt])
+  @@index([isActive])
 }
