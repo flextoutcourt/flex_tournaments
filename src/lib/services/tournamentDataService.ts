@@ -3,8 +3,16 @@
  * Abstracts sessionStorage and data parsing logic
  */
 
-import { Item, TournamentConfig } from '@/types/tournament';
+import { Item } from '@/types/tournament';
 import { getYouTubeVideoId } from '@/utils/youtubeUtils';
+
+export interface TournamentConfig {
+  id: string;
+  title: string;
+  mode?: string;
+  items: Item[];
+  categories?: string[] | null;
+}
 
 export interface TournamentDataResult {
   id: string;

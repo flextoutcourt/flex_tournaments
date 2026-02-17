@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { AppError } from './errors';
 import { ZodError } from 'zod';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError, PrismaClientValidationError } from '@prisma/client/runtime/library';
 
 /**
  * Standard API response structure for success
@@ -66,7 +66,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   }
 
   // Handle Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  if (error instanceof PrismaClientKnownRequestError) {
     // Unique constraint violation
     if (error.code === 'P2002') {
       const target = (error.meta?.target as string[]) || [];
@@ -94,7 +94,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   }
 
   // Handle Prisma validation errors
-  if (error instanceof Prisma.PrismaClientValidationError) {
+  if (error instanceof PrismaClientValidationError) {
     return errorResponse(
       'Erreur de validation des données',
       400,
@@ -115,3 +115,12 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   const message = error instanceof Error ? error.message : 'Une erreur interne est survenue';
   return errorResponse(message, 500, 'INTERNAL_SERVER_ERROR');
 }
+
+/**
+ * Convenience object for API responses
+ */
+export const apiResponse = {
+  success: successResponse,
+  error: errorResponse,
+  handleError: handleApiError,
+};

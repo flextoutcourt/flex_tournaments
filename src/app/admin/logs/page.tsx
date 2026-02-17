@@ -58,7 +58,7 @@ export default async function AdminLogsPage({
     'Admin': ['admin_panel_viewed', 'app_initialized'],
   };
 
-  const flatActions = Object.values(actionsByCategory).flat();
+  const _flatActions = Object.values(actionsByCategory).flat();
   const entityTypes = ['tournament', 'item', 'user'];
 
   return (

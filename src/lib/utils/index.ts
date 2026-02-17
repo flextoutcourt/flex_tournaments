@@ -10,7 +10,6 @@ export {
   interpolate,
   requestAnimationLoop,
   easing,
-  type EasingFunction,
 } from './animationUtils';
 
-export { createMouseHaloHandler, type MouseHaloHandler } from './mouseUtils';
+export { createMouseHaloHandler } from './mouseUtils';

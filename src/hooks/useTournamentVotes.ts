@@ -98,7 +98,7 @@ export function useTournamentVotes({
         serviceRef.current.flushPending();
       }
     };
-  }, [autoConnect, tournamentId]);
+  }, [autoConnect, tournamentId, onBatchVotes]);
 
   // Expose public methods
   const connect = useCallback(async () => {

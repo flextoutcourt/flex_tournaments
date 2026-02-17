@@ -26,7 +26,7 @@ export const authConfig: NextAuthConfig = {
           );
 
           return user;
-        } catch (error) {
+        } catch (_error) {
           // AuthService throws error for banned users, but we've already checked this on client
           // If somehow a banned user gets here, deny login
           return null;
@@ -35,7 +35,7 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account: _account }) {
       if (user) {
         token.role = user.role;
         token.id = user.id;
@@ -53,7 +53,7 @@ export const authConfig: NextAuthConfig = {
       }
       return session;
     },
-    async signIn({ user, account }) {
+    async signIn({ user, account: _account }) {
       if (!user?.id) return false;
 
       try {
@@ -90,38 +90,6 @@ export const authConfig: NextAuthConfig = {
         // Don't fail login if session creation fails
       }
 
-      return true;
-    },
-    async signOut({ token }) {
-      if (token?.id) {
-        try {
-          // Mark all sessions as inactive for this user
-          await prisma.userSession.updateMany(
-            {
-              where: {
-                userId: token.id as string,
-                isActive: true,
-              },
-            },
-            {
-              isActive: false,
-            }
-          );
-
-          // Log the logout action
-          await prisma.activityLog.create({
-            data: {
-              userId: token.id as string,
-              action: 'user_logout',
-              description: 'Utilisateur déconnecté',
-              entityType: 'user',
-              entityId: token.id as string,
-            },
-          });
-        } catch (error) {
-          console.error('Error logging out:', error);
-        }
-      }
       return true;
     },
   },

@@ -3,14 +3,6 @@
  * Handles script loading, API readiness, and player lifecycle
  */
 
-declare global {
-  interface Window {
-    YT: any;
-    onYouTubeIframeAPIReady: () => void;
-    isYouTubeApiReadyState?: boolean;
-  }
-}
-
 export class YouTubeService {
   private static isLoading = false;
   private static isReady = false;

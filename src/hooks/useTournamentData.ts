@@ -32,6 +32,10 @@ export function useTournamentData() {
       const data = TournamentDataService.loadFromSession(tournamentId);
       TournamentDataService.validate(data);
 
+      if (!data) {
+        throw new Error('Données du tournoi introuvables');
+      }
+
       setTournamentTitle(data.title);
       setTournamentMode(data.mode ?? 'STANDARD');
       setTournamentCategories(data.categories ?? null);

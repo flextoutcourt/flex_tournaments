@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { Tournament, TournamentSession, Vote } from '@prisma/client';
+import { TournamentSession, Vote } from '@prisma/client';
 
 /**
  * Service for persisting tournament state to the database
@@ -297,7 +297,7 @@ export class TournamentPersistenceService {
       include: {
         tournament: {
           include: {
-            items: true,
+            Items: true,
           },
         },
       },

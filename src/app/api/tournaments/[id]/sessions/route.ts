@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { TournamentPersistenceService } from '@/lib/services/tournamentPersistenceService';
 import { apiResponse } from '@/lib/apiResponse';
 
 /**
- * GET /api/users/[userId]/tournament-sessions
+ * GET /api/tournaments/[id]/sessions
  * Get all active tournament sessions for a user (for "Continue Tournament" feature)
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.userId;
+    const { id: userId } = await params;
     const requestingUserId = req.headers.get('x-user-id');
 
     // Users can only view their own sessions
@@ -22,7 +22,7 @@ export async function GET(
     const sessions = await TournamentPersistenceService.getActiveSessionsForUser(userId);
 
     return apiResponse.success({
-      sessions: sessions.map((session) => ({
+      sessions: sessions.map((session: any) => ({
         id: session.id,
         tournamentId: session.tournamentId,
         tournament: {
@@ -51,10 +51,10 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: tournamentId } = params;
+    const { id: tournamentId } = await params;
     const userId = req.headers.get('x-user-id');
 
     if (!userId) {

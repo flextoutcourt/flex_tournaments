@@ -48,7 +48,9 @@ export function useVoteAnimation(config: Partial<AnimationConfig> = {}) {
    */
   const getBarPosition = useCallback(
     (itemId: 'item1' | 'item2'): TargetPosition | null => {
-      return getTargetPosition(barRefs.current[itemId]);
+      const ref = barRefs.current[itemId];
+      if (!ref) return null;
+      return getTargetPosition(ref);
     },
     []
   );
@@ -58,9 +60,12 @@ export function useVoteAnimation(config: Partial<AnimationConfig> = {}) {
    */
   const animateVoteToTarget = useCallback(
     (itemId: 'item1' | 'item2') => {
+      const ref = barRefs.current[itemId];
+      if (!ref) return;
+      
       const tokenId = generateTokenId('vote');
       const now = Date.now();
-      const targetPos = getTargetPosition(barRefs.current[itemId]);
+      const targetPos = getTargetPosition(ref);
 
       const newToken: VoteToken = {
         id: tokenId,

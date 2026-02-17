@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
-  } catch (error) {
+  } catch (_error) {
     // Silently fail without logging to avoid stack frame spam
     return NextResponse.json(
       { error: 'Failed to log tracking events' },

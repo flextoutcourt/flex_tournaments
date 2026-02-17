@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { Item, CurrentMatch, MatchParticipant } from '../types';
+import { Item, CurrentMatch } from '../types';
 import { TournamentLogicService, TournamentState } from '@/lib/services/tournamentLogicService';
 
 interface UseTournamentLogicProps {
@@ -104,7 +104,7 @@ export function useTournamentLogic({
   }, [initialItems, state.selectedItemCountOption, onTournamentError, twoCategoryMode, categoryA, categoryB]);
 
   // Declare winner and advance
-  const handleDeclareWinnerAndNext = useCallback(() => {
+  const _handleDeclareWinnerAndNext = useCallback(() => {
     if (state.tournamentWinner) return;
 
     // Ask which item won (since we need to know which one)

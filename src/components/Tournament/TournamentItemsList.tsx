@@ -1,7 +1,7 @@
 // components/TournamentItemsList.tsx
 'use client'; // Si des actions client (ex: suppression) sont ajoutées
 
-import { Item } from '@prisma/client'; // Type Prisma pour Item
+import { Item } from '@/types'; // Type for Item
 import Link from 'next/link';
 import { FaYoutube, FaTrash, FaEdit, FaSearch, FaTimes } from 'react-icons/fa';
 import { useRouter } from 'next/navigation'; // Pour rafraîchir après suppression
@@ -23,7 +23,7 @@ export default function TournamentItemsList({ items, tournamentId, status, twoCa
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>(categories?.[0] || 'all');
   
-  const cardRef = useMouseHalo('rgba(168, 85, 247, 0.6)');
+  const _cardRef = useMouseHalo('rgba(168, 85, 247, 0.6)');
 
   // Filter items based on search query
   const filteredItems = useMemo(() => {

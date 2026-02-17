@@ -1,6 +1,6 @@
 // app/tournament/[id]/live/components/ParticipantCard.tsx
 import React, { RefObject } from 'react';
-import { motion, AnimatePresence }  from 'framer-motion';
+import { motion }  from 'framer-motion';
 import { FaYoutube } from 'react-icons/fa';
 import { MatchParticipant } from '@/types';
 import VoteBar from '../Shared/Votebar';

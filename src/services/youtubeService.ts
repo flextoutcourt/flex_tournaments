@@ -1,5 +1,4 @@
 import { prisma } from '@/lib/prisma';
-import { DatabaseError } from '@/lib/errors';
 
 export interface YouTubeSearchResult {
   id: string;

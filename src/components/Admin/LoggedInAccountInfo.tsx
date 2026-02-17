@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { FaUser, FaShieldAlt, FaClock, FaInfoCircle } from 'react-icons/fa';
+import { FaUser, FaClock, FaInfoCircle } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
 
 interface LoggedInUser {
@@ -15,7 +15,7 @@ interface LoggedInUser {
 export function LoggedInAccountInfo() {
   const { data: session, status } = useSession();
   const [userDetails, setUserDetails] = useState<LoggedInUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

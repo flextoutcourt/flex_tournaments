@@ -36,7 +36,7 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
   const {
     activeTokens,
     registerBarRef,
-    getTargetPosition,
+    getBarPosition,
     animateVoteToTarget,
     animationConfig,
   } = useVoteAnimation({ duration: 800 });
@@ -52,7 +52,7 @@ const ActiveMatchView: React.FC<ActiveMatchViewProps> = ({
     <>
       <VoteAnimationLayer
         activeTokens={activeTokens}
-        getTargetPosition={getTargetPosition}
+        getTargetPosition={getBarPosition}
         animationDuration={animationConfig.duration}
         originX={animationConfig.originX}
         originY={animationConfig.originY}

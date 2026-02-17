@@ -74,7 +74,7 @@ export default function EditTournamentPage() {
     register,
     handleSubmit,
     formState: { errors, isValid: isFormValid },
-    control,
+    control: _control,
     watch,
     reset,
   } = useForm<IEditTournamentFormInputs>({
@@ -235,7 +235,7 @@ export default function EditTournamentPage() {
       await navigator.clipboard.writeText(url);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
+    } catch (_err) {
       setError('Erreur lors de la copie');
     }
   };

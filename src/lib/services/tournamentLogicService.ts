@@ -3,7 +3,7 @@
  * Encapsulates state management and match generation logic
  */
 
-import { Item, CurrentMatch, MatchParticipant } from '@/app/tournament/[id]/live/types';
+import { Item, CurrentMatch, MatchParticipant } from '@/types';
 import { shuffleArray } from '@/utils/arrayUtils';
 import { generateMatches } from '@/utils/tournamentHelper';
 
@@ -148,7 +148,7 @@ export class TournamentLogicService {
     categoryA: string | null = null,
     categoryB: string | null = null
   ): Partial<TournamentState> | null {
-    const { activeMatch, matches, currentMatchIndex, advancingToNextRound, currentRoundNumber } = state;
+    const { matches, currentMatchIndex, advancingToNextRound, currentRoundNumber } = state;
 
     if (!state.matches[state.currentMatchIndex]) return null;
 

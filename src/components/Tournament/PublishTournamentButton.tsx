@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaShareSquare } from 'react-icons/fa';
 
 interface PublishTournamentButtonProps {
   tournamentId: string;

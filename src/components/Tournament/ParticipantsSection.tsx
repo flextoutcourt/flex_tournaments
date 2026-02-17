@@ -2,7 +2,7 @@
 'use client';
 
 import { FaListUl, FaUsers } from 'react-icons/fa';
-import { Item } from '@prisma/client';
+import { Item } from '@/types';
 import TournamentItemsList from './TournamentItemsList';
 import { useMouseHalo } from '@/hooks/useMouseHalo';
 

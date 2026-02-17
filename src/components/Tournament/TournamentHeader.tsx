@@ -20,8 +20,8 @@ export default function TournamentHeader({
   description,
   createdAt,
   itemsCount,
-  editLink,
-  statusBadge,
+  editLink: _editLink,
+  statusBadge: _statusBadge,
   actionButtons,
 }: TournamentHeaderProps) {
   const cardRef = useMouseHalo('rgba(99, 102, 241, 0.4)');

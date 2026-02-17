@@ -1,7 +1,7 @@
 // app/auth/reset-password/page.tsx
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FaLock, FaCheckCircle, FaExclamationCircle, FaArrowLeft } from 'react-icons/fa';
@@ -20,11 +20,7 @@ function ResetPasswordContent() {
   const [tokenValid, setTokenValid] = useState(false);
   const [email, setEmail] = useState('');
 
-  useEffect(() => {
-    validateToken();
-  }, [token]);
-
-  const validateToken = async () => {
+  const validateToken = useCallback(async () => {
     if (!token) {
       setError('Token de réinitialisation manquant');
       setValidating(false);
@@ -48,7 +44,11 @@ function ResetPasswordContent() {
     } finally {
       setValidating(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    validateToken();
+  }, [validateToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

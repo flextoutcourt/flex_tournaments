@@ -2,10 +2,9 @@
 import {prisma} from '../../../lib/prisma'; // Ajustez le chemin si nécessaire
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { FaEdit, FaListUl, FaRocket, FaShareSquare, FaExclamationCircle, FaTrophy, FaUsers, FaClock, FaLock } from 'react-icons/fa';
+import { FaEdit, FaRocket, FaShareSquare, FaExclamationCircle, FaTrophy, FaUsers, FaClock, FaLock } from 'react-icons/fa';
 import { auth } from '@/lib/auth';
 import AddItemForm from '@/components/Forms/Tournament/AddItemForm';
-import TournamentItemsList from '@/components/Tournament/TournamentItemsList';
 import ParticipantsSection from '@/components/Tournament/ParticipantsSection';
 import LaunchTournamentSection from '@/components/Tournament/LaunchTournamentSection';
 import PublishTournamentButton from '@/components/Tournament/PublishTournamentButton';

@@ -25,7 +25,7 @@ export function useTournamentPersistence({
   currentRoundNumber,
   tournamentWinner,
   matches,
-  twitchChannel,
+  twitchChannel: _twitchChannel,
 }: UseTournamentPersistenceProps) {
   const { data: session } = useSession();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -84,9 +84,8 @@ export function useTournamentPersistence({
               index: i,
               item1: m.item1,
               item2: m.item2,
-              winner: m.winner,
-              votes1: m.votes1 || 0,
-              votes2: m.votes2 || 0,
+              votes1: (m as any).votes1 || 0,
+              votes2: (m as any).votes2 || 0,
             })),
             participants: [],
             scores: {},
@@ -99,7 +98,7 @@ export function useTournamentPersistence({
           return;
         }
 
-        const data = await response.json();
+        const _data = await response.json();
         console.log('[Hook] ✓ Session saved successfully');
       } catch (error) {
         console.error('[Hook] ✗ Failed to save session:', error);

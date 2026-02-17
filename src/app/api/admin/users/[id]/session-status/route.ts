@@ -11,7 +11,7 @@ import { AdminService } from '@/services/adminService';
  */
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -33,7 +33,7 @@ export async function GET(
       );
     }
 
-    const userId = params.id;
+    const { id: userId } = await params;
 
     // Check for active sessions
     const activeSessions = await prisma.userSession.findMany(

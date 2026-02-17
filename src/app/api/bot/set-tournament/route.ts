@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       tournament: {
         id: tournament.id,
         title: tournament.title,
-        items: tournament.Items.map(item => ({
+        items: tournament.Items.map((item: { id: string; name: string }) => ({
           id: item.id,
           name: item.name,
         })),

@@ -37,7 +37,7 @@ async function flushTrackingQueue() {
       body: JSON.stringify({ events }),
       keepalive: true, // Keep connection alive
     });
-  } catch (error) {
+  } catch (_error) {
     // Silently re-queue failed events without logging
     trackingQueue = [...events, ...trackingQueue];
   }
@@ -164,7 +164,7 @@ export function setupGlobalClickTracking() {
   }, true); // Use capture phase to catch all events
 
   // Track form input changes (on change event only, not on every keystroke)
-  document.addEventListener('change', (e: Event) => {
+  document.addEventListener('change', (_e: Event) => {
     // Disabled - causes too many requests during re-renders
     // const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
     // if (!target) return;
@@ -183,7 +183,7 @@ export function setupGlobalClickTracking() {
   }, true);
 
   // Track focus events (field entered)
-  document.addEventListener('focus', (e: FocusEvent) => {
+  document.addEventListener('focus', (_e: FocusEvent) => {
     // Disabled - causes too many requests
     // const target = e.target as HTMLElement;
     // if (!target) return;
@@ -203,7 +203,7 @@ export function setupGlobalClickTracking() {
   }, true);
 
   // Track blur events (field left)
-  document.addEventListener('blur', (e: FocusEvent) => {
+  document.addEventListener('blur', (_e: FocusEvent) => {
     // Disabled - causes too many requests
     // const target = e.target as HTMLElement;
     // if (!target) return;

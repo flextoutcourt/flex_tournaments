@@ -27,8 +27,8 @@ export async function GET(
       where: { tournamentId },
     });
 
-    const itemVotes = votesByItem.map(vote => {
-      const item = items.find(i => i.id === vote.itemId);
+    const itemVotes = votesByItem.map((vote: { itemId: string; _count: { id: number } }) => {
+      const item = items.find((i: { id: string; name: string }) => i.id === vote.itemId);
       return {
         itemId: vote.itemId,
         itemName: item?.name || 'Unknown',
@@ -39,7 +39,7 @@ export async function GET(
     return NextResponse.json({
       tournamentId,
       totalVotes,
-      itemVotes: itemVotes.sort((a, b) => b.votes - a.votes),
+      itemVotes: itemVotes.sort((a: { votes: number }, b: { votes: number }) => b.votes - a.votes),
     });
   } catch (error) {
     console.error('Error fetching tournament votes:', error);

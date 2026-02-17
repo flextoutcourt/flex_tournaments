@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { UseTmiClientProps, CurrentMatch, VotePayload } from '@/types/tmi';
+import { UseTmiClientProps } from '@/types/tmi';
 import { VOTE_KEYWORDS_ITEM1, VOTE_KEYWORDS_ITEM2 } from '../constants';
 import { TmiConnectionService } from '@/lib/services/tmiConnectionService';
 import { VoteService } from '@/lib/services/voteService';
@@ -22,9 +22,9 @@ export function useTmiClient({
   tournamentWinner,
   activeMatch,
   currentMatchIndex,
-  onScoreUpdate,
+  onScoreUpdate: _onScoreUpdate,
   onModifyScore,
-  onVoteReceived,
+  onVoteReceived: _onVoteReceived,
   tournamentId,
 }: UseTmiClientProps) {
   // Service instances
@@ -32,6 +32,10 @@ export function useTmiClient({
   const voteServiceRef = useRef<VoteService | null>(null);
   const deduplicationServiceRef = useRef<VoteDuplicationService | null>(null);
   const messageHandlerServiceRef = useRef<TmiMessageHandlerService | null>(null);
+
+  // Tracking refs for votes
+  const votedUsersRef = useRef(new Set<{username: string; votedItem: string}>());
+  const superVotesThisMatchRef = useRef(new Set<string>());
 
   // State
   const [isTmiConnected, setIsTmiConnected] = useState(false);
@@ -261,7 +265,7 @@ export function useTmiClient({
     isTmiConnected,
     tmiError,
     setTmiError,
-    votedUsers: new Map(),
-    superVotesThisMatch: new Set(),
+    votedUsers: votedUsersRef,
+    superVotesThisMatch: superVotesThisMatchRef,
   };
 }

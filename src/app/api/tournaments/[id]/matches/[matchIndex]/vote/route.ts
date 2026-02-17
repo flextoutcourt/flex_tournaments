@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { TournamentPersistenceService } from '@/lib/services/tournamentPersistenceService';
 import { apiResponse } from '@/lib/apiResponse';
 
@@ -8,10 +8,10 @@ import { apiResponse } from '@/lib/apiResponse';
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; matchIndex: string } }
+  { params }: { params: Promise<{ id: string; matchIndex: string }> }
 ) {
   try {
-    const { id: tournamentId, matchIndex } = params;
+    const { id: tournamentId, matchIndex } = await params;
     const userId = req.headers.get('x-user-id');
     const twitchUsername = req.nextUrl.searchParams.get('twitch');
 
@@ -64,10 +64,10 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string; matchIndex: string } }
+  { params }: { params: Promise<{ id: string; matchIndex: string }> }
 ) {
   try {
-    const { id: tournamentId, matchIndex } = params;
+    const { id: tournamentId, matchIndex } = await params;
     const userId = req.headers.get('x-user-id');
     const body = await req.json();
     const { itemId, twitchUsername } = body;
@@ -86,7 +86,7 @@ export async function POST(
       tournamentId,
       itemId,
       matchIndexNum,
-      userId,
+      userId ?? undefined,
       twitchUsername
     );
 

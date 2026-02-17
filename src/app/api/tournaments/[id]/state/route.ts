@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { TournamentPersistenceService } from '@/lib/services/tournamentPersistenceService';
 import { apiResponse } from '@/lib/apiResponse';
 
@@ -8,19 +8,19 @@ import { apiResponse } from '@/lib/apiResponse';
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: tournamentId } = params;
+    const { id: tournamentId } = await params;
     const userId = req.headers.get('x-user-id');
 
     if (!userId) {
       return apiResponse.error('User not authenticated', 401);
     }
 
-    const state = await TournamentPersistenceService.loadTournamentState(tournamentId);
+    const session = await TournamentPersistenceService.getOrCreateSession(tournamentId, userId);
 
-    if (!state) {
+    if (!session || !session.stateJson) {
       return apiResponse.success({
         currentMatchIndex: 0,
         currentRoundNumber: 0,
@@ -31,7 +31,12 @@ export async function GET(
       });
     }
 
-    return apiResponse.success(state);
+    return apiResponse.success({
+      currentMatchIndex: session.currentMatchIndex,
+      currentRoundNumber: session.currentRoundNumber,
+      tournamentWinnerId: session.tournamentWinnerId,
+      ...(session.stateJson as any),
+    });
   } catch (error) {
     console.error('[Tournament State] Error loading state:', error);
     return apiResponse.error('Failed to load tournament state', 500);
@@ -44,10 +49,10 @@ export async function GET(
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: tournamentId } = params;
+    const { id: tournamentId } = await params;
     const userId = req.headers.get('x-user-id');
 
     if (!userId) {
@@ -72,8 +77,9 @@ export async function POST(
     await TournamentPersistenceService.startTournamentSession(tournamentId, userId);
 
     // Save state
-    const updatedTournament = await TournamentPersistenceService.saveTournamentState(
+    const updatedSession = await TournamentPersistenceService.saveTournamentProgress(
       tournamentId,
+      userId,
       {
         currentMatchIndex,
         currentRoundNumber,
@@ -87,10 +93,10 @@ export async function POST(
     return apiResponse.success({
       message: 'Tournament state saved',
       tournament: {
-        id: updatedTournament.id,
-        currentMatchIndex: updatedTournament.currentMatchIndex,
-        currentRoundNumber: updatedTournament.currentRoundNumber,
-        tournamentWinnerId: updatedTournament.tournamentWinnerId,
+        id: updatedSession.tournamentId,
+        currentMatchIndex: updatedSession.currentMatchIndex,
+        currentRoundNumber: updatedSession.currentRoundNumber,
+        tournamentWinnerId: updatedSession.tournamentWinnerId,
       },
     });
   } catch (error) {

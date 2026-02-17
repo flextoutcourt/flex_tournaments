@@ -118,7 +118,7 @@ export async function POST(
     // If itemId not provided, try to determine it from the vote and tournament state
     try {
       let itemId = body.itemId;
-      let matchIndex = body.matchIndex !== undefined ? body.matchIndex : 0;
+      const matchIndex = body.matchIndex !== undefined ? body.matchIndex : 0;
 
       console.log('[VOTES] Attempting to persist vote:', {
         tournamentId,

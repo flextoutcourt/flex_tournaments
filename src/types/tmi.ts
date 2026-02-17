@@ -2,11 +2,13 @@
  * TMI.js Related Types
  */
 
+import { CurrentMatch as BaseCurrentMatch } from '@/types';
+
 export interface UseTmiClientProps {
   liveTwitchChannel: string | null;
   isTournamentActive: boolean;
   tournamentWinner: any | null;
-  activeMatch: CurrentMatch | null;
+  activeMatch: BaseCurrentMatch | null;
   currentMatchIndex: number;
   onScoreUpdate: (matchIndex: number, itemKey: 'item1' | 'item2') => void;
   onModifyScore: (matchIndex: number, itemKey: 'item1' | 'item2', amount: number) => void;
@@ -14,21 +16,7 @@ export interface UseTmiClientProps {
   tournamentId?: string | null;
 }
 
-export interface CurrentMatch {
-  id: string;
-  roundNumber: number;
-  matchNumberInRound: number;
-  item1: {
-    id: string;
-    name: string;
-    score: number;
-  };
-  item2: {
-    id: string;
-    name: string;
-    score: number;
-  };
-}
+export type CurrentMatch = BaseCurrentMatch;
 
 export interface VotePayload {
   vote: '1' | '2';

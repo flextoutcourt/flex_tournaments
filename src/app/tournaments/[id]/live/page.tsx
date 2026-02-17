@@ -1,7 +1,7 @@
 // app/tournament/[id]/live/page.tsx
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useTransition } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { FaStopCircle } from 'react-icons/fa';
@@ -160,10 +160,10 @@ export default function TournamentLivePage() {
 
   // Flush pending votes when match changes and page is ready
   useEffect(() => {
-    if (activeMatch && !matches[currentMatchIndex]?.isProcessing) {
+    if (activeMatch && !(matches[currentMatchIndex] as any)?.isProcessing) {
       flushPendingVotes();
     }
-  }, [activeMatch?.id, currentMatchIndex, matches, flushPendingVotes]);
+  }, [activeMatch, currentMatchIndex, matches, flushPendingVotes]);
 
   // Reconnect vote listener when tournament starts
   useEffect(() => {
@@ -356,7 +356,7 @@ export default function TournamentLivePage() {
             tmiError={_tmiError}
             generalError={pageError && activeMatch ? pageError : null}
             isVotesConnected={isVotesConnected}
-            voteCount={votes.length}
+            voteCount={votes}
           />
       </div>
 

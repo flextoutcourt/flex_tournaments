@@ -11,7 +11,7 @@ import { AdminService } from '@/services/adminService';
  */
 export async function POST(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -33,7 +33,7 @@ export async function POST(
       );
     }
 
-    const userId = params.id;
+    const { id: userId } = await params;
 
     // Prevent admins from kicking themselves
     if (session.user.id === userId) {
@@ -44,18 +44,16 @@ export async function POST(
     }
 
     // Invalidate all active sessions for this user
-    await prisma.userSession.updateMany(
-      {
-        where: {
-          userId: userId,
-          isActive: true,
-        },
+    await prisma.userSession.updateMany({
+      where: {
+        userId: userId,
+        isActive: true,
       },
-      {
+      data: {
         isActive: false,
         expiresAt: new Date(), // Expire immediately
-      }
-    );
+      },
+    });
 
     // Log the action for audit trail
     await prisma.activityLog.create({
